@@ -82,7 +82,8 @@ export default function createApp (option, config = {}) {
 
   if (__mpx_mode__ === 'web') {
     global.__mpxOptionsMap = global.__mpxOptionsMap || {}
-    global.__mpxOptionsMap[global.currentModuleId] = defaultOptions
+    // currentModuleId -> _mid
+    global.__mpxOptionsMap[global._mid] = defaultOptions
     global.getApp = function () {
       if (!isBrowser) {
         console.error('[Mpx runtime error]: Dangerous API! global.getApp method is running in non browser environments')
@@ -90,7 +91,7 @@ export default function createApp (option, config = {}) {
       return appData
     }
   } else {
-    const ctor = config.customCtor || global.currentCtor || App
+    const ctor = config.customCtor || global._ctor || App
     ctor(defaultOptions)
   }
 }

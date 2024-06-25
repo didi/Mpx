@@ -12,6 +12,7 @@ const transDynamicClassExpr = require('./trans-dynamic-class-expr')
 const dash2hump = require('../utils/hump-dash').dash2hump
 const makeMap = require('../utils/make-map')
 const { isNonPhrasingTag } = require('../utils/dom-tag-config')
+const { isProductionLikeMode, generateVariableNameBySource } = require('../utils/optimize-compress')
 
 const no = function () {
   return false
@@ -786,6 +787,10 @@ function parse (template, options) {
       }
     })
     arr.length && warn$1(`\n ${options.filePath} \n 组件 ${arr.join(' | ')} 注册了，但是未被对应的模板引用，建议删除！`)
+  }
+
+  if (options.optimizeSize && isProductionLikeMode(this)) {
+    processOptimizeSize(root, options)
   }
 
   return {
@@ -2203,6 +2208,33 @@ function postProcessComponentIs (el) {
     }
   }
   return el
+}
+
+function processOptimizeSize (root, options) {
+  const { usingComponents, filePath } = options
+  function walkNode (root, callback) {
+    if (!root) return
+    callback(root)
+    if (Array.isArray(root.children) && root.children.length) {
+      for (const node of root.children) {
+        if (!node) continue
+        walkNode(node, callback)
+      }
+    }
+  }
+  // 记录所有原生组件（判断条件：usingComponents中不存在的组件）
+  const nativeTags = new Set()
+  walkNode(root, (node) => {
+    if (node.tag && usingComponents.indexOf(node.tag) === -1) {
+      nativeTags.add(node.tag)
+    }
+  })
+  walkNode(root, (node) => {
+    // 只有自定义组件才替换（判断条件：在usingComponents中的组件），并且新组件名不允许出现原生组件名
+    if (node.tag && usingComponents.indexOf(node.tag) !== -1) {
+      node.tag = generateVariableNameBySource(node.tag, filePath + 'componentName', [...nativeTags])
+    }
+  })
 }
 
 function stringifyAttr (val) {

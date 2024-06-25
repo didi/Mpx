@@ -249,7 +249,8 @@ module.exports = function (content) {
       }
 
       // 注入模块id及资源路径
-      output += `global.currentModuleId = ${JSON.stringify(moduleId)}\n`
+      // currentModuleId -> _mid
+      output += `global._mid = ${JSON.stringify(moduleId)}\n`
       if (!isProduction) {
         output += `global.currentResource = ${JSON.stringify(filePath)}\n`
       }
@@ -279,12 +280,14 @@ module.exports = function (content) {
         : ctorType === 'component'
           ? 'Component'
           : 'App'
-
-      output += `global.currentCtor = ${ctor}\n`
-      output += `global.currentCtorType = ${JSON.stringify(ctor.replace(/^./, (match) => {
+      // currentCtor -> _ctor
+      output += `global._ctor = ${ctor}\n`
+      // currentCtorType -> _ctorT
+      output += `global._ctorT = ${JSON.stringify(ctor.replace(/^./, (match) => {
         return match.toLowerCase()
       }))}\n`
-      output += `global.currentResourceType = ${JSON.stringify(ctorType)}\n`
+      // currentResourceType -> _crt
+      output += `global._crt = ${JSON.stringify(ctorType)}\n`
 
       // template
       output += '/* template */\n'
@@ -345,7 +348,8 @@ module.exports = function (content) {
       const script = parts.script || {}
       if (script) {
         scriptSrcMode = script.mode || scriptSrcMode
-        if (scriptSrcMode) output += `global.currentSrcMode = ${JSON.stringify(scriptSrcMode)}\n`
+        // currentSrcMode -> _sm
+        if (scriptSrcMode) output += `global._sm = ${JSON.stringify(scriptSrcMode)}\n`
         // 传递ctorType以补全js内容
         const extraOptions = {
           ...script.src

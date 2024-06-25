@@ -19,13 +19,16 @@ export default function createFactory (type) {
           options.__pageCtor__ = true
         }
       } else {
-        if (global.currentCtor) {
-          ctor = global.currentCtor
-          if (global.currentCtorType === 'page') {
+        // currentCtor -> _ctor
+        if (global._ctor) {
+          ctor = global._ctor
+          // currentCtorType -> _ctorT
+          if (global._ctorT === 'page') {
             options.__pageCtor__ = true
           }
-          if (global.currentResourceType && global.currentResourceType !== type) {
-            error(`The ${global.currentResourceType} [${global.currentResource}] is not supported to be created by ${type} constructor.`)
+          // currentResourceType -> _crt
+          if (global._crt && global._crt !== type) {
+            error(`The ${global._crt} [${global.currentResource}] is not supported to be created by ${type} constructor.`)
           }
         } else {
           if (type === 'page') {
@@ -59,7 +62,8 @@ export default function createFactory (type) {
     const defaultOptions = getDefaultOptions(type, { rawOptions, currentInject })
     if (__mpx_mode__ === 'web') {
       global.__mpxOptionsMap = global.__mpxOptionsMap || {}
-      global.__mpxOptionsMap[global.currentModuleId] = defaultOptions
+      // currentModuleId -> _mid
+      global.__mpxOptionsMap[global._mid] = defaultOptions
     } else if (ctor) {
       return ctor(defaultOptions)
     }

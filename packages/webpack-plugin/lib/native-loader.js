@@ -241,19 +241,23 @@ module.exports = function (content) {
       }
 
       // 注入模块id及资源路径
-      let output = `global.currentModuleId = ${JSON.stringify(moduleId)}\n`
+      // currentModuleId -> _mid
+      let output = `global._mid = ${JSON.stringify(moduleId)}\n`
       if (!isProduction) {
         output += `global.currentResource = ${JSON.stringify(filePath)}\n`
       }
-
-      output += `global.currentCtor = ${ctor}\n`
-      output += `global.currentCtorType = ${JSON.stringify(ctor.replace(/^./, (match) => {
+      // currentCtor -> _ctor
+      output += `global._ctor = ${ctor}\n`
+      // currentCtorType -> _ctorT
+      output += `global._ctorT = ${JSON.stringify(ctor.replace(/^./, (match) => {
         return match.toLowerCase()
       }))}\n`
-      output += `global.currentResourceType = ${JSON.stringify(ctorType)}\n`
+      // currentResourceType -> _crt
+      output += `global._crt = ${JSON.stringify(ctorType)}\n`
 
       if (srcMode) {
-        output += `global.currentSrcMode = ${JSON.stringify(srcMode)}\n`
+        // currentSrcMode -> _sm
+        output += `global._sm = ${JSON.stringify(srcMode)}\n`
       }
 
       for (const type in typeResourceMap) {

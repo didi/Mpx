@@ -13,6 +13,7 @@ module.exports = function (raw) {
   const env = mpx.env
   const defs = mpx.defs
   const i18n = mpx.i18n
+  const optimizeSize = mpx.optimizeSize
   const externalClasses = mpx.externalClasses
   const decodeHTMLText = mpx.decodeHTMLText
   const globalSrcMode = mpx.srcMode
@@ -68,6 +69,7 @@ module.exports = function (raw) {
     // 这里需传递resourcePath和wxsContentMap保持一致
     filePath: resourcePath,
     i18n,
+    optimizeSize,
     checkUsingComponents: matchCondition(resourcePath, mpx.checkUsingComponentsRules),
     globalComponents: Object.keys(mpx.usingComponents),
     forceProxyEvent: matchCondition(resourcePath, mpx.forceProxyEventRules),
@@ -92,9 +94,9 @@ module.exports = function (raw) {
     const src = loaderUtils.urlToRequest(meta.wxsModuleMap[module], root)
     resultSource += `var ${module} = require(${loaderUtils.stringifyRequest(this, src)});\n`
   }
-
+  // currentInject -> _cj
   resultSource += `
-global.currentInject = {
+global._cj = {
   moduleId: ${JSON.stringify(moduleId)}
 };\n`
 
@@ -117,7 +119,7 @@ global.currentInject = {
           ignoreMap
         })
       resultSource += `
-global.currentInject.render = function (_i, _c, _r, _sc) {
+global._cj.render = function (_i, _c, _r, _sc) {
 ${bindResult.code}
 _r(${optimizeRenderLevel === 2 ? 'true' : ''});
 };\n`
@@ -139,20 +141,20 @@ ${e.stack}`)
 
   if (meta.computed) {
     resultSource += bindThis.transform(`
-global.currentInject.injectComputed = {
+global._cj.injectComputed = {
   ${meta.computed.join(',')}
 };`).code + '\n'
   }
 
   if (meta.refs) {
     resultSource += `
-global.currentInject.getRefsData = function () {
+global._cj.getRefsData = function () {
   return ${JSON.stringify(meta.refs)};
 };\n`
   }
 
   if (meta.options) {
-    resultSource += `global.currentInject.injectOptions = ${JSON.stringify(meta.options)};` + '\n'
+    resultSource += `global._cj.injectOptions = ${JSON.stringify(meta.options)};` + '\n'
   }
 
   this.emitFile(resourcePath, '', undefined, {

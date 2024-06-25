@@ -63,11 +63,8 @@ const stringifyLoadersAndResource = require('./utils/stringify-loaders-resource'
 const emitFile = require('./utils/emit-file')
 const { MPX_PROCESSED_FLAG, MPX_DISABLE_EXTRACTOR_CACHE } = require('./utils/const')
 const isEmptyObject = require('./utils/is-empty-object')
+const { generateVariableNameBySource, isProductionLikeMode } = require('./utils/optimize-compress')
 require('./utils/check-core-version-match')
-
-const isProductionLikeMode = options => {
-  return options.mode === 'production' || !options.mode
-}
 
 const isStaticModule = module => {
   if (!module.resource) return false
@@ -670,6 +667,7 @@ class MpxWebpackPlugin {
           },
           asyncSubpackageRules: this.options.asyncSubpackageRules,
           optimizeRenderRules: this.options.optimizeRenderRules,
+          optimizeSize: this.options.optimizeSize,
           pathHash: (resourcePath) => {
             if (this.options.pathHashMode === 'relative' && this.options.projectRoot) {
               return hash(path.relative(this.options.projectRoot, resourcePath))
@@ -701,7 +699,15 @@ class MpxWebpackPlugin {
             const customOutputPath = this.options.customOutputPath
             if (conflictPath) return conflictPath.replace(/(\.[^\\/]+)?$/, match => hash + match)
             if (typeof customOutputPath === 'function') return customOutputPath(type, name, hash, ext).replace(/^\//, '')
-            if (type === 'component' || type === 'page') return path.join(type + 's', name + hash, 'index' + ext)
+            if (type === 'component') {
+              if (this.options.optimizeSize && isProductionLikeMode(compiler.options)) {
+                const pathHash = generateVariableNameBySource(resourcePath, 'componentPath')
+                return path.join('c', pathHash, 'i' + ext)
+              } else {
+                return path.join('c', name + hash, 'i' + ext)
+              }
+            }
+            if (type === 'page') return path.join(type + 's', name + hash, 'index' + ext)
             return path.join(type, name + hash + ext)
           },
           extractedFilesCache: new Map(),

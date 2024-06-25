@@ -182,9 +182,12 @@ function buildGlobalParams ({
   global.__mpxOptionsMap = global.__mpxOptionsMap || {}
   global.__mpxTransRpxFn = ${webConfig.transRpxFn} \n`
   }
-  content += `  global.currentModuleId = ${JSON.stringify(moduleId)}\n`
-  content += `  global.currentSrcMode = ${JSON.stringify(scriptSrcMode)}\n`
-  content += `  global.currentInject = ${JSON.stringify({ moduleId })}\n`
+  // currentModuleId -> _mid
+  content += `  global._mid = ${JSON.stringify(moduleId)}\n`
+  // currentSrcMode -> _sm
+  content += `  global._sm = ${JSON.stringify(scriptSrcMode)}\n`
+  // currentInject -> _cj
+  content += `  global._cj = ${JSON.stringify({ moduleId })}\n`
   if (!isProduction) {
     content += `  global.currentResource = ${JSON.stringify(loaderContext.resourcePath)}\n`
   }
