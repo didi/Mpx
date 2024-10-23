@@ -66,7 +66,12 @@ export function getDefaultOptions ({ type, rawOptions = {} }) {
     }
   }
   const rootMixins = [{
+    data: {
+      _data_v_id: '' // template 透传scoped样式用
+    },
     beforeCreate () {
+      const _scopeId = this.$vnode.componentOptions.Ctor?.options?._scopeId
+      this._data_v_id = _scopeId
       initProxy(this, rawOptions)
     },
     created () {

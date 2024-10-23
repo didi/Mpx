@@ -30,7 +30,7 @@ module.exports = function (template, {
   const { resourcePath } = parseRequest(loaderContext.resource)
   const builtInComponentsMap = {}
 
-  let wxsModuleMap, genericsInfo
+  let wxsModuleMap, genericsInfo, inlineTemplateMap, templateSrcList
   let output = '/* template */\n'
 
   if (ctorType === 'app') {
@@ -103,6 +103,12 @@ module.exports = function (template, {
             wxsContentMap[`${resourcePath}~${module}`] = meta.wxsContentMap[module]
           }
         }
+        if (meta.inlineTemplateMap) {
+          inlineTemplateMap = meta.inlineTemplateMap
+        }
+        if (meta.templateSrcList?.length) {
+          templateSrcList = meta.templateSrcList
+        }
         if (meta.builtInComponentsMap) {
           Object.keys(meta.builtInComponentsMap).forEach((name) => {
             builtInComponentsMap[name] = {
@@ -118,10 +124,11 @@ module.exports = function (template, {
     })
     output += '\n'
   }
-
   callback(null, {
     output,
     builtInComponentsMap,
+    inlineTemplateMap,
+    templateSrcList,
     genericsInfo,
     wxsModuleMap
   })

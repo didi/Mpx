@@ -42,6 +42,7 @@ const FlagPluginDependency = require('./dependencies/FlagPluginDependency')
 const RemoveEntryDependency = require('./dependencies/RemoveEntryDependency')
 const RecordLoaderContentDependency = require('./dependencies/RecordLoaderContentDependency')
 const RecordRuntimeInfoDependency = require('./dependencies/RecordRuntimeInfoDependency')
+const WriteVfsDependency = require('./dependencies/WriteVfsDependency')
 const SplitChunksPlugin = require('webpack/lib/optimize/SplitChunksPlugin')
 const fixRelative = require('./utils/fix-relative')
 const parseRequest = require('./utils/parse-request')
@@ -625,6 +626,9 @@ class MpxWebpackPlugin {
 
       compilation.dependencyFactories.set(RecordRuntimeInfoDependency, new NullFactory())
       compilation.dependencyTemplates.set(RecordRuntimeInfoDependency, new RecordRuntimeInfoDependency.Template())
+
+      compilation.dependencyFactories.set(WriteVfsDependency, new NullFactory())
+      compilation.dependencyTemplates.set(WriteVfsDependency, new WriteVfsDependency.Template())
 
       compilation.dependencyTemplates.set(ImportDependency, new ImportDependencyTemplate())
     })
