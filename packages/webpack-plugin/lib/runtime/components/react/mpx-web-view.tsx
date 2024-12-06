@@ -165,15 +165,17 @@ const _WebView = forwardRef<HandlerRef<WebView, WebViewProps>, WebViewProps>((pr
       }
     })
   }
+  const events = {
+    ...(bindload && { onLoad: _load }),
+    ...(binderror && { onError: _error }),
+    ...(bindmessage && { onMessage: _message })
+  }
   return (<Portal>
     <WebView
       style={defaultWebViewStyle}
       source={{ uri: src }}
       ref={webViewRef}
-      onLoad={_load}
-      onError={_error}
-      onMessage={_message}
-      onNavigationStateChange={_changeUrl}
+      {...events}
       javaScriptEnabled={true}
     ></WebView>
   </Portal>)

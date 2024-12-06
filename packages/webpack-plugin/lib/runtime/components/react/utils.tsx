@@ -10,6 +10,7 @@ import type { AnyFunc, ExtendedFunctionComponent } from './types/common'
 export const TEXT_STYLE_REGEX = /color|font.*|text.*|letterSpacing|lineHeight|includeFontPadding|writingDirection/
 export const PERCENT_REGEX = /^\s*-?\d+(\.\d+)?%\s*$/
 export const URL_REGEX = /^\s*url\(["']?(.*?)["']?\)\s*$/
+export const SVG_REGEXP = /https?:\/\/.*\.(?:svg)/i
 export const BACKGROUND_REGEX = /^background(Image|Size|Repeat|Position)$/
 export const TEXT_PROPS_REGEX = /ellipsizeMode|numberOfLines/
 export const DEFAULT_FONT_SIZE = 16
