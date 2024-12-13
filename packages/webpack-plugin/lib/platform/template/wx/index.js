@@ -68,7 +68,7 @@ module.exports = function getSpec ({ warn, error }) {
           if (el) {
             const injectWxsProp = {
               injectWxsPath: '~' + normalize.lib('runtime/swanHelper.wxs'),
-              injectWxsModuleName: '__swanHelper__'
+              injectWxsModuleName: 'mpxSwanHelper'
             }
             if (el.injectWxsProps && Array.isArray(el.injectWxsProps)) {
               el.injectWxsProps.push(injectWxsProp)
@@ -78,7 +78,7 @@ module.exports = function getSpec ({ warn, error }) {
           }
           return {
             name: 's-for',
-            value: `${itemName}, ${indexName} in __swanHelper__.processFor(${listName})${keyStr}`
+            value: `${itemName}, ${indexName} in mpxSwanHelper.processFor(${listName})${keyStr}`
           }
         },
         web ({ value }, { el }) {

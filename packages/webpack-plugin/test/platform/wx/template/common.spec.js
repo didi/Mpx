@@ -29,9 +29,9 @@ describe('common spec case', function () {
     const output2 = compileTemplate(input2, { srcMode: 'wx', mode: 'swan' })
     const output3 = compileTemplate(input3, { srcMode: 'wx', mode: 'swan' })
     const wxsPath = lib('runtime/swanHelper.wxs')
-    expect(output1).toBe(`<import-sjs module="__swanHelper__" src="~${wxsPath}"></import-sjs><view s-for="t1, t2 in __swanHelper__.processFor(list) trackBy t1.u1">123</view>`)
-    expect(output2).toBe(`<import-sjs module="__swanHelper__" src="~${wxsPath}"></import-sjs><view s-for='t1, t2 in __swanHelper__.processFor("strings") trackBy t1.u1'>123</view>`)
-    expect(output3).toBe(`<import-sjs module="__swanHelper__" src="~${wxsPath}"></import-sjs><view s-for="t1, t2 in __swanHelper__.processFor(8) trackBy t1.u1">123</view>`)
+    expect(output1).toBe(`<import-sjs module="mpxSwanHelper" src="~${wxsPath}"></import-sjs><view s-for="t1, t2 in mpxSwanHelper.processFor(list) trackBy t1.u1">123</view>`)
+    expect(output2).toBe(`<import-sjs module="mpxSwanHelper" src="~${wxsPath}"></import-sjs><view s-for='t1, t2 in mpxSwanHelper.processFor("strings") trackBy t1.u1'>123</view>`)
+    expect(output3).toBe(`<import-sjs module="mpxSwanHelper" src="~${wxsPath}"></import-sjs><view s-for="t1, t2 in mpxSwanHelper.processFor(8) trackBy t1.u1">123</view>`)
   })
 
   it('should wrap directive expression in swan', function () {
