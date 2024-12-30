@@ -1,6 +1,6 @@
 import { View, Dimensions, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native'
 import { successHandle, failHandle } from '../../../common/js'
-import { Portal } from '@ant-design/react-native'
+import Portal from '@mpxjs/webpack-plugin/lib/runtime/components/react/dist/mpx-portal'
 const { width, height } = Dimensions.get('window')
 const showModal = function (options = {}) {
   const {

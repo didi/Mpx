@@ -374,11 +374,11 @@ module.exports = function getSpec ({ warn, error }) {
   // transform 转换
   const formatTransform = ({ prop, value, selector }, { mode }) => {
     // css var & 数组直接返回
-    if (Array.isArray(value) || calcExp.test(value)) return { prop, value }
+    if (Array.isArray(value) || cssVariableExp.test(value)) return { prop, value }
     const values = parseValues(value)
     const transform = []
     values.forEach(item => {
-      const match = item.match(/([/\w]+)\(([^)]+)\)/)
+      const match = item.match(/([/\w]+)\((.+)\)/)
       if (match && match.length >= 3) {
         let key = match[1]
         const val = match[2]
@@ -407,23 +407,23 @@ module.exports = function getSpec ({ warn, error }) {
           case 'rotate3d': // x y z angle
           case 'translate3d': // x y 支持 z不支持
           case 'scale3d': // x y 支持 z不支持
-            {
-              // 2 个以上的值处理
-              key = key.replace('3d', '')
-              const vals = parseValues(val, ',').splice(0, key === 'rotate' ? 4 : 3)
-              // scale(.5) === scaleX(.5) scaleY(.5)
-              if (vals.length === 1 && key === 'scale') {
-                vals.push(vals[0])
-              }
-              const xyz = ['X', 'Y', 'Z']
-              transform.push(...vals.map((v, index) => {
-                if (key !== 'rotate' && index > 1) {
-                  unsupportedPropError({ prop: `${key}Z`, value, selector }, { mode })
-                }
-                return { [`${key}${xyz[index] || ''}`]: v.trim() }
-              }))
-              break
+          {
+            // 2 个以上的值处理
+            key = key.replace('3d', '')
+            const vals = parseValues(val, ',').splice(0, key === 'rotate' ? 4 : 3)
+            // scale(.5) === scaleX(.5) scaleY(.5)
+            if (vals.length === 1 && key === 'scale') {
+              vals.push(vals[0])
             }
+            const xyz = ['X', 'Y', 'Z']
+            transform.push(...vals.map((v, index) => {
+              if (key !== 'rotate' && index > 1) {
+                unsupportedPropError({ prop: `${key}Z`, value, selector }, { mode })
+              }
+              return { [`${key}${xyz[index] || ''}`]: v.trim() }
+            }))
+            break
+          }
           case 'translateZ':
           case 'scaleZ':
           default:

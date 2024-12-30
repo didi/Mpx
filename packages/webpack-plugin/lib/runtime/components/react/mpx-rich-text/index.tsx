@@ -3,10 +3,10 @@
  * ✔ nodes
  */
 import { View, ViewProps, ViewStyle } from 'react-native'
-import { useRef, forwardRef, JSX, useState } from 'react'
+import { useRef, forwardRef, JSX, useState, createElement } from 'react'
 import useInnerProps from '../getInnerListeners'
 import useNodesRef, { HandlerRef } from '../useNodesRef' // 引入辅助函数
-import { useTransformStyle, useLayout } from '../utils'
+import { useTransformStyle, useLayout, extendObject } from '../utils'
 import { WebView, WebViewMessageEvent } from 'react-native-webview'
 import { generateHTML } from './html'
 
@@ -91,28 +91,22 @@ const _RichText = forwardRef<HandlerRef<View, _RichTextProps>, _RichTextProps>((
     layoutRef
   })
 
-  const innerProps = useInnerProps(props, {
+  const innerProps = useInnerProps(props, extendObject({
     ref: nodeRef,
-    style: { ...normalStyle, ...layoutStyle },
-    ...layoutProps
-  }, [], {
+    style: extendObject(normalStyle, layoutStyle)
+  }, layoutProps), [], {
     layoutRef
   })
 
   const html: string = typeof nodes === 'string' ? nodes : jsonToHtmlStr(nodes)
 
-  return (
-    <View
-      {...innerProps}
-    >
-      <WebView
-        source={{ html: generateHTML(html) }}
-        onMessage={(event: WebViewMessageEvent) => {
-          setWebViewHeight(+event.nativeEvent.data)
-        }}
-      >
-      </WebView>
-    </View>
+  return createElement(View, innerProps,
+    createElement(WebView, {
+      source: { html: generateHTML(html) },
+      onMessage: (event: WebViewMessageEvent) => {
+        setWebViewHeight(+event.nativeEvent.data)
+      }
+    })
   )
 })
 

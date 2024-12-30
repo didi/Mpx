@@ -8,6 +8,7 @@ export type Faces = {
   deg: number
   offsetY: number
   opacity: number
+  scale: number
   screenHeight: number
 }
 
@@ -33,7 +34,7 @@ export const createFaces = (
     const maxStep = Math.trunc((visibleCount + 2) / 2) // + 2 because there are 2 more faces at 90 degrees
     const stepDegree = 90 / maxStep
 
-    const result = []
+    const result: number[] = []
     for (let i = 1; i <= maxStep; i++) {
       result.push(i * stepDegree)
     }
@@ -54,6 +55,9 @@ export const createFaces = (
       for (let i = 0; i < index; i++) {
         offset += freeSpaces[i]
       }
+      if (index === 0) {
+        offset *= 0.6
+      }
       return offset
     }) as unknown as T
     return [screenHeights, offsets]
@@ -62,16 +66,18 @@ export const createFaces = (
   const getOpacity = (index: number) => {
     const map: Record<number, number> = {
       0: 0,
-      1: 0.2,
-      2: 0.35,
-      3: 0.45,
-      4: 0.5
+      1: 0.8,
+      2: 0.9 // 0.35
+      // 3: 0.45, // 0.45
+      // 4: 0.5 // 0.5
     }
-    return map[index] ?? Math.min(1, map[4] + index * 0.5)
+    return map[index] ?? Math.min(1, map[2] + index * 0.05)
   }
 
   const degrees = getDegreesRelativeCenter()
   const [screenHeight, offsets] = getScreenHeightsAndOffsets(degrees)
+
+  const scales = [0.973, 0.9, 0.8]
 
   return [
     // top items
@@ -82,13 +88,14 @@ export const createFaces = (
           deg: degree,
           opacity: getOpacity(degrees.length - 1 - index),
           offsetY: -1 * offsets[index],
+          scale: scales[index],
           screenHeight: screenHeight[index]
         }
       })
       .reverse(),
 
     // center item
-    { index: 0, deg: 0, opacity: 1, offsetY: 0, screenHeight: itemHeight },
+    { index: 0, deg: 0, opacity: 1, offsetY: 0, scale: 1, screenHeight: itemHeight },
 
     // bottom items
     ...degrees.map<Faces>((degree, index) => {
@@ -97,6 +104,7 @@ export const createFaces = (
         deg: -1 * degree,
         opacity: getOpacity(degrees.length - 1 - index),
         offsetY: offsets[index],
+        scale: scales[index],
         screenHeight: screenHeight[index]
       }
     })

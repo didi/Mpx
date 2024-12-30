@@ -26,7 +26,7 @@ module.exports = function (script, {
 import { getComponent } from ${stringifyRequest(loaderContext, optionProcessorPath)}
 import { NavigationContainer, StackActions } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
-import { Provider } from '@ant-design/react-native'
+import Provider from '@mpxjs/webpack-plugin/lib/runtime/components/react/dist/mpx-provider'
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 

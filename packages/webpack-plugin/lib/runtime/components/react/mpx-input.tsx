@@ -149,7 +149,7 @@ const Input = forwardRef<HandlerRef<TextInput, FinalInputProps>, FinalInputProps
     'parent-font-size': parentFontSize,
     'parent-width': parentWidth,
     'parent-height': parentHeight,
-    'adjust-position': adjustPosition = true,
+    'adjust-position': adjustPosition = false,
     bindinput,
     bindfocus,
     bindblur,

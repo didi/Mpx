@@ -147,7 +147,7 @@ export default function createApp (option, config = {}) {
             }
           }
           global.__mpxAppCbs.show.forEach((cb) => {
-            cb(options)
+            cb(options || {})
           })
           if (navigation && hasOwn(global.__mpxPageStatusMap, navigation.pageId)) {
             global.__mpxPageStatusMap[navigation.pageId] = 'show'

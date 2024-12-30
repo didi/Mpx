@@ -11,7 +11,7 @@
  * ✘ scale-min
  * ✘ scale-max
  * ✘ scale-value
- * ✘ animation
+ * ✔ animation
  * ✔ bindchange
  * ✘ bindscale
  * ✔ htouchmove

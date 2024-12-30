@@ -1,8 +1,10 @@
-import { View, LayoutChangeEvent } from 'react-native'
-import { ReactNode, forwardRef, useRef } from 'react'
+import { View } from 'react-native'
+import Animated, { useAnimatedStyle, interpolate, SharedValue } from 'react-native-reanimated'
+import { ReactNode, forwardRef, useRef, useContext } from 'react'
 import useInnerProps from './getInnerListeners'
 import useNodesRef, { HandlerRef } from './useNodesRef' // 引入辅助函数
 import { useTransformStyle, splitStyle, splitProps, wrapChildren, useLayout } from './utils'
+import { SwiperContext } from './context'
 
 interface SwiperItemProps {
   'item-id'?: string;
@@ -14,15 +16,29 @@ interface SwiperItemProps {
   'parent-height'?: number;
   children?: ReactNode;
   style?: Object;
+  customStyle: [];
+  itemIndex: number;
+}
+
+interface ContextType {
+  offset: SharedValue<number>;
+  step: SharedValue<number>;
+  scale: boolean;
 }
 
 const _SwiperItem = forwardRef<HandlerRef<View, SwiperItemProps>, SwiperItemProps>((props: SwiperItemProps, ref) => {
   const {
     'enable-var': enableVar,
     'external-var-context': externalVarContext,
-    style
+    style,
+    customStyle,
+    itemIndex
   } = props
 
+  const contextValue = useContext(SwiperContext) as ContextType
+  const offset = contextValue.offset || 0
+  const step = contextValue.step || 0
+  const scale = contextValue.scale || false
   const { textProps } = splitProps(props)
   const nodeRef = useRef(null)
 
@@ -47,19 +63,31 @@ const _SwiperItem = forwardRef<HandlerRef<View, SwiperItemProps>, SwiperItemProp
   } = useLayout({ props, hasSelfPercent, setWidth, setHeight, nodeRef: nodeRef })
 
   const innerProps = useInnerProps(props, {
-    style: { ...innerStyle, ...layoutStyle },
     ref: nodeRef,
     ...layoutProps
   }, [
     'children',
-    'enable-offset'
+    'enable-offset',
+    'style'
   ], { layoutRef })
 
+  const itemAnimatedStyle = useAnimatedStyle(() => {
+    if (!step.value) return {}
+    const inputRange = [step.value, 0]
+    const outputRange = [0.7, 1]
+    return {
+      transform: [{
+        scale: interpolate(Math.abs(Math.abs(offset.value) - itemIndex * step.value), inputRange, outputRange)
+      }]
+    }
+  })
+  const mergeStyle = [innerStyle, layoutStyle, { width: '100%', height: '100%' }, scale ? itemAnimatedStyle : {}].concat(customStyle)
   return (
-    <View
-      data-itemId={props['item-id']}
-      {...innerProps}>
-       {
+    <Animated.View
+      {...innerProps}
+      style={mergeStyle}
+      data-itemId={props['item-id']}>
+      {
         wrapChildren(
           props,
           {
@@ -70,7 +98,7 @@ const _SwiperItem = forwardRef<HandlerRef<View, SwiperItemProps>, SwiperItemProp
           }
         )
       }
-    </View>
+    </Animated.View>
   )
 })
 

@@ -2,7 +2,6 @@ import { isArray, isObject, isString, noop } from '@mpxjs/utils'
 import throttle from 'lodash/throttle'
 import { Dimensions } from 'react-native'
 import { getFocusedNavigation } from '../../../common/js'
-
 const WindowRefStr = 'window'
 const IgnoreTarget = 'ignore'
 const DefaultMargin = { top: 0, bottom: 0, left: 0, right: 0 }
@@ -12,10 +11,14 @@ class RNIntersectionObserver {
   constructor (component, options, intersectionCtx) {
     this.id = idCount++
     this.component = component
-    this.options = options
-    this.thresholds = options.thresholds.sort((a, b) => a - b) || [0]
-    this.initialRatio = options.initialRatio || 0
-    this.observeAll = options.observeAll || false
+    this.options = Object.assign({
+      thresholds: [0],
+      initialRatio: 0,
+      observeAll: false
+    }, options || {})
+    this.thresholds = this.options.thresholds.sort((a, b) => a - b) || [0]
+    this.initialRatio = this.options.initialRatio
+    this.observeAll = this.options.observeAll
 
     // 组件上挂载对应的observers，用于在组件销毁的时候进行批量disconnect
     this.component._intersectionObservers = this.component.__intersectionObservers || []
@@ -26,7 +29,7 @@ class RNIntersectionObserver {
     this.margins = DefaultMargin
     this.callback = noop
 
-    this.throttleMeasure = this.getThrottleMeasure(options.throttleTime || 100)
+    this.throttleMeasure = this.getThrottleMeasure(this.options.throttleTime || 100)
 
     // 记录上一次相交的比例
     this.previousIntersectionRatio = []
@@ -65,7 +68,7 @@ class RNIntersectionObserver {
 
   observe (selector, callback) {
     if (this.observerRefs) {
-      console.error('"observe" call can be only called once in IntersectionObserver')
+      console.warn('"observe" call can be only called once in IntersectionObserver')
       return
     }
     let targetRef = null
@@ -75,7 +78,7 @@ class RNIntersectionObserver {
       targetRef = this.component.__selectRef(selector, 'node')
     }
     if (!targetRef || targetRef.length === 0) {
-      console.error('intersection observer target not found')
+      console.warn('intersection observer target not found')
       return
     }
     this.observerRefs = isArray(targetRef) ? targetRef : [targetRef]
@@ -87,7 +90,7 @@ class RNIntersectionObserver {
     if (this.windowRect) return this.windowRect
     const navigation = getFocusedNavigation() || {}
     const screen = Dimensions.get('screen')
-    const navigationLayout = navigation.layout || {
+    const navigationLayout = navigation.layout  || {
       x: 0,
       y: 0,
       width: screen.width,
@@ -95,10 +98,10 @@ class RNIntersectionObserver {
     }
 
     const windowRect = {
-      top: navigationLayout.y + this.margins.top,
-      left: this.margins.left,
-      right: navigationLayout.width - this.margins.right,
-      bottom: navigationLayout.y + navigationLayout.height - this.margins.bottom
+      top: navigationLayout.y - this.margins.top,
+      left: 0 - this.margins.left,
+      right: navigationLayout.width + this.margins.right,
+      bottom: navigationLayout.y + navigationLayout.height + this.margins.bottom
     }
 
     this.windowRect = windowRect

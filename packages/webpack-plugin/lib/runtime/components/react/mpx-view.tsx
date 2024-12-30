@@ -12,9 +12,10 @@ import useAnimationHooks from './useAnimationHooks'
 import type { AnimationProp } from './useAnimationHooks'
 import { ExtendedViewStyle } from './types/common'
 import useNodesRef, { HandlerRef } from './useNodesRef'
-import { parseUrl, PERCENT_REGEX, splitStyle, splitProps, useTransformStyle, wrapChildren, useLayout, renderImage, pickStyle, extendObject } from './utils'
+import { parseUrl, PERCENT_REGEX, splitStyle, splitProps, useTransformStyle, wrapChildren, useLayout, renderImage, pickStyle, extendObject, useHoverStyle } from './utils'
 import { error } from '@mpxjs/utils'
 import LinearGradient from 'react-native-linear-gradient'
+import { GestureDetector } from 'react-native-gesture-handler'
 
 export interface _ViewProps extends ViewProps {
   style?: ExtendedViewStyle
@@ -642,7 +643,7 @@ function wrapImage (imageStyle?: ExtendedViewStyle, innerStyle?: Record<string, 
 
 interface WrapChildrenConfig {
   hasVarDec: boolean
-  enableBackground: boolean
+  enableBackground?: boolean
   textStyle?: TextStyle
   backgroundStyle?: ExtendedViewStyle
   varContext?: Record<string, any>
@@ -652,6 +653,11 @@ interface WrapChildrenConfig {
 }
 
 function wrapWithChildren (props: _ViewProps, { hasVarDec, enableBackground, textStyle, backgroundStyle, varContext, textProps, innerStyle, enableFastImage }: WrapChildrenConfig) {
+  enableBackground = enableBackground || !!backgroundStyle
+  const enableBackgroundRef = useRef(enableBackground)
+  if (enableBackgroundRef.current !== enableBackground) {
+    error('[Mpx runtime error]: background use should be stable in the component lifecycle, or you can set [enable-background] with true.')
+  }
   const children = wrapChildren(props, {
     hasVarDec,
     varContext,
@@ -667,7 +673,7 @@ function wrapWithChildren (props: _ViewProps, { hasVarDec, enableBackground, tex
 
 const _View = forwardRef<HandlerRef<View, _ViewProps>, _ViewProps>((viewProps, ref): JSX.Element => {
   const { textProps, innerProps: props = {} } = splitProps(viewProps)
-  let {
+  const {
     style = {},
     'hover-style': hoverStyle,
     'hover-start-time': hoverStartTime = 50,
@@ -683,8 +689,6 @@ const _View = forwardRef<HandlerRef<View, _ViewProps>, _ViewProps>((viewProps, r
     animation
   } = props
 
-  const [isHover, setIsHover] = useState(false)
-
   // 默认样式
   const defaultStyle: ExtendedViewStyle = style.display === 'flex'
     ? {
@@ -694,6 +698,8 @@ const _View = forwardRef<HandlerRef<View, _ViewProps>, _ViewProps>((viewProps, r
         flexWrap: 'nowrap'
       }
     : {}
+
+  const { isHover, enableHoverStyle, gesture } = useHoverStyle({ hoverStyle, hoverStartTime, hoverStayTime })
 
   const styleObj: ExtendedViewStyle = extendObject({}, defaultStyle, style, isHover ? hoverStyle as ExtendedViewStyle : {})
 
@@ -714,55 +720,10 @@ const _View = forwardRef<HandlerRef<View, _ViewProps>, _ViewProps>((viewProps, r
 
   const { textStyle, backgroundStyle, innerStyle = {} } = splitStyle(normalStyle)
 
-  enableBackground = enableBackground || !!backgroundStyle
-  const enableBackgroundRef = useRef(enableBackground)
-  if (enableBackgroundRef.current !== enableBackground) {
-    error('[Mpx runtime error]: background use should be stable in the component lifecycle, or you can set [enable-background] with true.')
-  }
-
   const nodeRef = useRef(null)
   useNodesRef<View, _ViewProps>(props, ref, nodeRef, {
     style: normalStyle
   })
-
-  const dataRef = useRef<{
-    startTimer?: ReturnType<typeof setTimeout>
-    stayTimer?: ReturnType<typeof setTimeout>
-  }>({})
-
-  useEffect(() => {
-    return () => {
-      dataRef.current.startTimer && clearTimeout(dataRef.current.startTimer)
-      dataRef.current.stayTimer && clearTimeout(dataRef.current.stayTimer)
-    }
-  }, [])
-
-  const setStartTimer = () => {
-    dataRef.current.startTimer && clearTimeout(dataRef.current.startTimer)
-    dataRef.current.startTimer = setTimeout(() => {
-      setIsHover(true)
-    }, +hoverStartTime)
-  }
-
-  const setStayTimer = () => {
-    dataRef.current.stayTimer && clearTimeout(dataRef.current.stayTimer)
-    dataRef.current.startTimer && clearTimeout(dataRef.current.startTimer)
-    dataRef.current.stayTimer = setTimeout(() => {
-      setIsHover(false)
-    }, +hoverStayTime)
-  }
-
-  function onTouchStart (e: NativeSyntheticEvent<TouchEvent>) {
-    const { bindtouchstart } = props
-    bindtouchstart && bindtouchstart(e)
-    setStartTimer()
-  }
-
-  function onTouchEnd (e: NativeSyntheticEvent<TouchEvent>) {
-    const { bindtouchend } = props
-    bindtouchend && bindtouchend(e)
-    setStayTimer()
-  }
 
   const {
     layoutRef,
@@ -772,30 +733,19 @@ const _View = forwardRef<HandlerRef<View, _ViewProps>, _ViewProps>((viewProps, r
 
   const viewStyle = extendObject({}, innerStyle, layoutStyle)
 
-  enableAnimation = enableAnimation || !!animation
-  const enableAnimationRef = useRef(enableAnimation)
-  if (enableAnimationRef.current !== enableAnimation) {
-    error('[Mpx runtime error]: animation use should be stable in the component lifecycle, or you can set [enable-animation] with true.')
-  }
-  const finalStyle = enableAnimationRef.current
-    ? [viewStyle, useAnimationHooks({
-        animation,
-        style: viewStyle
-      })]
-    : viewStyle
+  const { enableStyleAnimation, animationStyle } = useAnimationHooks({
+    enableAnimation,
+    animation,
+    style: viewStyle
+  })
+
   const innerProps = useInnerProps(
     props,
     extendObject({
       ref: nodeRef,
-      style: finalStyle
+      style: enableStyleAnimation ? [viewStyle, animationStyle] : viewStyle
     },
-    layoutProps,
-    hoverStyle
-      ? {
-          bindtouchstart: onTouchStart,
-          bindtouchend: onTouchEnd
-        }
-      : {}
+    layoutProps
     ), [
       'hover-start-time',
       'hover-stay-time',
@@ -807,7 +757,7 @@ const _View = forwardRef<HandlerRef<View, _ViewProps>, _ViewProps>((viewProps, r
 
   const childNode = wrapWithChildren(props, {
     hasVarDec,
-    enableBackground: enableBackgroundRef.current,
+    enableBackground,
     textStyle,
     backgroundStyle,
     varContext: varContextRef.current,
@@ -816,9 +766,13 @@ const _View = forwardRef<HandlerRef<View, _ViewProps>, _ViewProps>((viewProps, r
     enableFastImage
   })
 
-  return enableAnimation
+  const BaseComponent = enableStyleAnimation
     ? createElement(Animated.View, innerProps, childNode)
     : createElement(View, innerProps, childNode)
+
+  return enableHoverStyle
+    ? createElement(GestureDetector, { gesture }, BaseComponent)
+    : BaseComponent
 })
 
 _View.displayName = 'MpxView'

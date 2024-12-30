@@ -1,6 +1,6 @@
 {
   "name": "@mpxjs/utils",
-  "version": "2.9.69",
+  "version": "2.9.69-beta.1",
   "description": "A toolkit for mpx framework",
   "main": "src/index.js",
   "scripts": {

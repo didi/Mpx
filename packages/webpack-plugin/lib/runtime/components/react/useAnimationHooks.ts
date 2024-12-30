@@ -13,6 +13,7 @@ import {
   WithTimingConfig,
   AnimationCallback
 } from 'react-native-reanimated'
+import { error } from '@mpxjs/utils'
 import { ExtendedViewStyle } from './types/common'
 import type { _ViewProps } from './mpx-view'
 
@@ -110,7 +111,7 @@ const parseTransform = (transformStr: string) => {
   const values = parseValues(transformStr)
   const transform: {[propName: string]: string|number|number[]}[] = []
   values.forEach(item => {
-    const match = item.match(/([/\w]+)\(([^)]+)\)/)
+    const match = item.match(/([/\w]+)\((.+)\)/)
     if (match && match.length >= 3) {
       let key = match[1]
       const val = match[2]
@@ -166,8 +167,17 @@ const formatStyle = (style: ExtendedViewStyle): ExtendedViewStyle => {
   })
 }
 
-export default function useAnimationHooks<T, P> (props: _ViewProps) {
-  const { style = {}, animation } = props
+export default function useAnimationHooks<T, P> (props: _ViewProps & { enableAnimation?: boolean }) {
+  const { style = {}, animation, enableAnimation } = props
+
+  const enableStyleAnimation = enableAnimation || !!animation
+  const enableAnimationRef = useRef(enableStyleAnimation)
+  if (enableAnimationRef.current !== enableStyleAnimation) {
+    error('[Mpx runtime error]: animation use should be stable in the component lifecycle, or you can set [enable-animation] with true.')
+  }
+
+  if (!enableStyleAnimation) return { enableStyleAnimation }
+
   const originalStyle = formatStyle(style)
   // id 标识
   const id = animation?.id || -1
@@ -336,7 +346,8 @@ export default function useAnimationHooks<T, P> (props: _ViewProps) {
     }, {} as { [propName: string]: string | number })
   }
   // ** 生成动画样式
-  return useAnimatedStyle(() => {
+
+  const animationStyle = useAnimatedStyle(() => {
     // console.info(`useAnimatedStyle styles=`, originalStyle)
     return animatedStyleKeys.value.reduce((styles, key) => {
       // console.info('getAnimationStyles', key, shareValMap[key].value)
@@ -354,4 +365,9 @@ export default function useAnimationHooks<T, P> (props: _ViewProps) {
       return styles
     }, {} as ExtendedViewStyle)
   })
+
+  return {
+    enableStyleAnimation,
+    animationStyle
+  }
 }

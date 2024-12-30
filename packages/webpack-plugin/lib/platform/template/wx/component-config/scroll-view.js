@@ -53,7 +53,7 @@ module.exports = function ({ print }) {
         qa: qaPropLog
       },
       {
-        test: /^(scroll-into-view|refresher-threshold|enable-passive|scroll-anchoring|using-sticky|fast-deceleration|enable-flex)$/,
+        test: /^(refresher-threshold|enable-passive|scroll-anchoring|using-sticky|fast-deceleration|enable-flex)$/,
         android: androidPropLog,
         ios: iosPropLog
       },

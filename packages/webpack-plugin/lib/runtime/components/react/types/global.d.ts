@@ -1,3 +1,4 @@
+declare let __mpx_mode__: 'wx' | 'ali' | 'swan' | 'qq' | 'tt' | 'web' | 'dd' | 'qa' | 'jd' | 'android' | 'ios'
 declare module '@mpxjs/utils' {
   export function isEmptyObject (obj: Object): boolean
   export function isFunction (fn: unknown): boolean
@@ -20,7 +21,11 @@ declare module '@mpxjs/utils' {
       left: number
       right: number
     },
-    setOptions: (params: Record<string, any>) => void
+    setOptions: (params: Record<string, any>) => void,
+    addListener: (eventName: string, callback: (e: Event) => void) => void
+    removeListener: (eventName: string, callback: (e: Event) => void) => void
+    dispatch: (eventName: string) => void
+    pageId: number
   } | undefined
 }
 

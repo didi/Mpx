@@ -7,7 +7,7 @@ type OverlayProps = {
   overlayContainerStyle?: StyleProp<ViewStyle>
 }
 
-const Overlay = ({ itemHeight, overlayItemStyle, overlayContainerStyle }: OverlayProps) => {
+const _PickerViewOverlay = ({ itemHeight, overlayItemStyle, overlayContainerStyle }: OverlayProps) => {
   return (
     <View style={[styles.overlayContainer, overlayContainerStyle]} pointerEvents={'none'}>
       <View style={[styles.selection, { height: itemHeight }, overlayItemStyle]} />
@@ -19,7 +19,8 @@ const styles = StyleSheet.create({
   overlayContainer: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    zIndex: 200
   },
   selection: {
     borderTopWidth: 1,
@@ -29,4 +30,5 @@ const styles = StyleSheet.create({
   }
 })
 
-export default React.memo(Overlay)
+_PickerViewOverlay.displayName = 'MpxPickerViewOverlay'
+export default _PickerViewOverlay

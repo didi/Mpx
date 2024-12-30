@@ -34,7 +34,7 @@
  * ✘ bindagreeprivacyauthorization
  * ✔ bindtap
  */
-import { createElement, useEffect, useRef, useState, ReactNode, forwardRef, useContext, JSX } from 'react'
+import { createElement, useEffect, useRef, ReactNode, forwardRef, useContext, JSX } from 'react'
 import {
   View,
   StyleSheet,
@@ -45,10 +45,12 @@ import {
   NativeSyntheticEvent
 } from 'react-native'
 import { warn } from '@mpxjs/utils'
-import { getCurrentPage, splitProps, splitStyle, useLayout, useTransformStyle, wrapChildren, extendObject } from './utils'
+import { GestureDetector } from 'react-native-gesture-handler'
+import { getCurrentPage, splitProps, splitStyle, useLayout, useTransformStyle, wrapChildren, extendObject, useHoverStyle } from './utils'
 import useInnerProps, { getCustomEvent } from './getInnerListeners'
 import useNodesRef, { HandlerRef } from './useNodesRef'
 import { RouteContext, FormContext } from './context'
+import type { ExtendedViewStyle } from './types/common'
 
 export type Type = 'default' | 'primary' | 'warn'
 
@@ -68,7 +70,7 @@ export interface ButtonProps {
   disabled?: boolean
   loading?: boolean
   'hover-class'?: string
-  'hover-style'?: ViewStyle & TextStyle & Record<string, any>
+  'hover-style'?: ExtendedViewStyle
   'hover-start-time'?: number
   'hover-stay-time'?: number
   'open-type'?: OpenType
@@ -83,8 +85,6 @@ export interface ButtonProps {
   children: ReactNode
   bindgetuserinfo?: (userInfo: any) => void
   bindtap?: (evt: NativeSyntheticEvent<TouchEvent> | unknown) => void
-  bindtouchstart?: (evt: NativeSyntheticEvent<TouchEvent> | unknown) => void
-  bindtouchend?: (evt: NativeSyntheticEvent<TouchEvent> | unknown) => void
 }
 
 const LOADING_IMAGE_URI =
@@ -216,14 +216,14 @@ const Button = forwardRef<HandlerRef<View, ButtonProps>, ButtonProps>((buttonPro
     style = {},
     children,
     bindgetuserinfo,
-    bindtap,
-    bindtouchstart,
-    bindtouchend
+    bindtap
   } = props
 
   const pageId = useContext(RouteContext)
 
   const formContext = useContext(FormContext)
+
+  const { isHover, enableHoverStyle, gesture } = useHoverStyle({ hoverStyle, hoverStartTime, hoverStayTime, disabled })
 
   let submitFn: () => void | undefined
   let resetFn: () => void | undefined
@@ -232,16 +232,6 @@ const Button = forwardRef<HandlerRef<View, ButtonProps>, ButtonProps>((buttonPro
     submitFn = formContext.submit
     resetFn = formContext.reset
   }
-
-  const refs = useRef<{
-    hoverStartTimer: ReturnType<typeof setTimeout> | undefined
-    hoverStayTimer: ReturnType<typeof setTimeout> | undefined
-  }>({
-    hoverStartTimer: undefined,
-    hoverStayTimer: undefined
-  })
-
-  const [isHover, setIsHover] = useState(false)
 
   const isMiniSize = size === 'mini'
 
@@ -366,34 +356,6 @@ const Button = forwardRef<HandlerRef<View, ButtonProps>, ButtonProps>((buttonPro
     }
   }
 
-  const setStayTimer = () => {
-    clearTimeout(refs.current.hoverStayTimer)
-    refs.current.hoverStayTimer = setTimeout(() => {
-      setIsHover(false)
-      clearTimeout(refs.current.hoverStayTimer)
-    }, hoverStayTime)
-  }
-
-  const setStartTimer = () => {
-    clearTimeout(refs.current.hoverStartTimer)
-    refs.current.hoverStartTimer = setTimeout(() => {
-      setIsHover(true)
-      clearTimeout(refs.current.hoverStartTimer)
-    }, hoverStartTime)
-  }
-
-  const onTouchStart = (evt: NativeSyntheticEvent<TouchEvent>) => {
-    bindtouchstart && bindtouchstart(evt)
-    if (disabled) return
-    setStartTimer()
-  }
-
-  const onTouchEnd = (evt: NativeSyntheticEvent<TouchEvent>) => {
-    bindtouchend && bindtouchend(evt)
-    if (disabled) return
-    setStayTimer()
-  }
-
   const handleFormTypeFn = () => {
     if (formType === 'submit') {
       submitFn && submitFn()
@@ -418,8 +380,6 @@ const Button = forwardRef<HandlerRef<View, ButtonProps>, ButtonProps>((buttonPro
       },
       layoutProps,
       {
-        bindtouchstart: (bindtouchstart || !disabled) && onTouchStart,
-        bindtouchend: (bindtouchend || !disabled) && onTouchEnd,
         bindtap: !disabled && onTap
       }
     ),
@@ -442,7 +402,7 @@ const Button = forwardRef<HandlerRef<View, ButtonProps>, ButtonProps>((buttonPro
     }
   )
 
-  return createElement(View, innerProps, loading && createElement(Loading, { alone: !children }),
+  const baseButton = createElement(View, innerProps, loading && createElement(Loading, { alone: !children }),
     wrapChildren(
       props,
       {
@@ -453,6 +413,10 @@ const Button = forwardRef<HandlerRef<View, ButtonProps>, ButtonProps>((buttonPro
       }
     )
   )
+
+  return enableHoverStyle
+    ? createElement(GestureDetector, { gesture }, baseButton)
+    : baseButton
 })
 
 Button.displayName = 'MpxButton'

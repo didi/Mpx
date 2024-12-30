@@ -1207,7 +1207,7 @@ function processEventReact (el) {
   for (const type in eventConfigMap) {
     const { configs } = eventConfigMap[type]
     if (!configs.length) continue
-    const needBind = configs.length > 1 || configs[0].hasArgs
+    const needBind = configs.length > 1 || configs[0].hasArgs || tagRE.test(configs[0].value)
     if (needBind) {
       configs.forEach(({ name }) => {
         if (name) {

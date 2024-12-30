@@ -367,6 +367,12 @@ function usePageStatus (navigation, pageId) {
     const blurSubscription = navigation.addListener('blur', () => {
       pageStatusMap[pageId] = 'hide'
     })
+    const transitionEndSubscription = navigation.addListener('transitionEnd', () => {
+      if (global.__navigationHelper.transitionEndCallback) {
+        global.__navigationHelper.transitionEndCallback()
+        global.__navigationHelper.transitionEndCallback = null
+      }
+    })
     const unWatchAppFocusedState = watch(global.__mpxAppFocusedState, (value) => {
       pageStatusMap[pageId] = value
     })
@@ -375,11 +381,13 @@ function usePageStatus (navigation, pageId) {
       focusSubscription()
       blurSubscription()
       unWatchAppFocusedState()
+      transitionEndSubscription()
       del(pageStatusMap, pageId)
     }
   }, [navigation])
 }
 
+const pageConfigStack = []
 export function getDefaultOptions ({ type, rawOptions = {}, currentInject }) {
   rawOptions = mergeOptions(rawOptions, type, false)
   const components = Object.assign({}, rawOptions.components, currentInject.getComponents())
@@ -490,7 +498,7 @@ export function getDefaultOptions ({ type, rawOptions = {}, currentInject }) {
     const { Provider, useSafeAreaInsets, GestureHandlerRootView } = global.__navigationHelper
     const pageConfig = Object.assign({}, global.__mpxPageConfig, currentInject.pageConfig)
     const Page = ({ navigation, route }) => {
-      const [enabled, setEnabled] = useState(true)
+      const [enabled, setEnabled] = useState(false)
       const currentPageId = useMemo(() => ++pageId, [])
       const intersectionObservers = useRef({})
       usePageStatus(navigation, currentPageId)
@@ -505,20 +513,38 @@ export function getDefaultOptions ({ type, rawOptions = {}, currentInject }) {
           },
           headerTintColor: pageConfig.navigationBarTextStyle || 'white'
         })
-        if (__mpx_mode__ === 'android') {
-          ReactNative.StatusBar.setBarStyle(pageConfig.barStyle || 'dark-content')
+
+        const setStatusBar = (config) => {
+          ReactNative.StatusBar.setBarStyle(config.barStyle || 'dark-content')
           ReactNative.StatusBar.setTranslucent(isCustom) // 控制statusbar是否占位
-          const color = isCustom ? 'transparent' : pageConfig.statusBarColor
+          const color = isCustom ? 'transparent' : config.statusBarColor
           color && ReactNative.StatusBar.setBackgroundColor(color)
         }
+        if (__mpx_mode__ === 'android') {
+          pageConfigStack.push(pageConfig)
+          setStatusBar(pageConfig)
+        }
+        return () => {
+          if (__mpx_mode__ === 'android') {
+            pageConfigStack.pop()
+            const config = pageConfigStack[pageConfigStack.length - 1] || {}
+            setStatusBar(config)
+          }
+        };
       }, [])
 
       const rootRef = useRef(null)
-      const onLayout = useCallback(() => {
-        rootRef.current?.measureInWindow((x, y, width, height) => {
-          navigation.layout = { x, y, width, height }
-        })
-      }, [])
+
+      useEffect(() => {
+        const unsubscribe = navigation.addListener('transitionEnd', (e) => {
+          setTimeout(() => {
+            rootRef.current?.measureInWindow((x, y, width, height) => {
+              navigation.layout = { x, y, width, height }
+            })
+          }, 200)
+        });
+        return unsubscribe;
+      }, [navigation]);
 
       const withKeyboardAvoidingView = (element) => {
         if (__mpx_mode__ === 'ios') {
@@ -546,6 +572,14 @@ export function getDefaultOptions ({ type, rawOptions = {}, currentInject }) {
 
       navigation.insets = useSafeAreaInsets()
 
+      const [, setState] = useState(1)
+
+      const setStateRef = useRef(setState)
+
+      if (setStateRef.current !== setState) {
+        setStateRef.current = setState
+      }
+
       return createElement(GestureHandlerRootView,
         {
           style: {
@@ -559,8 +593,7 @@ export function getDefaultOptions ({ type, rawOptions = {}, currentInject }) {
                 flex: 1,
                 backgroundColor: pageConfig.backgroundColor || '#ffffff'
               },
-              ref: rootRef,
-              onLayout
+              ref: rootRef
             },
             createElement(RouteContext.Provider,
               {

@@ -126,8 +126,8 @@ function checkIsNeedPress (e: NativeTouchEvent, type: 'bubble' | 'capture', ref:
   const currentPageX = nativeEvent.changedTouches[0].pageX
   const currentPageY = nativeEvent.changedTouches[0].pageY
   if (
-    Math.abs(currentPageX - tapDetailInfo.x) > 1 ||
-        Math.abs(currentPageY - tapDetailInfo.y) > 1
+    Math.abs(currentPageX - tapDetailInfo.x) > 3 ||
+        Math.abs(currentPageY - tapDetailInfo.y) > 3
   ) {
     ref.current!.needPress[type] = false
     ref.current!.startTimer[type] &&
