@@ -165,7 +165,7 @@ class MpxWindicssPlugin {
     if (filepath) {
       compilation.fileDependencies.add(filepath)
       // fix jiti require cache for watch
-      delete require.cache[filepath]
+      // delete require.cache[filepath]
     }
 
     if (!config) {

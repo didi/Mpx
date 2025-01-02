@@ -1,11 +1,20 @@
-const { presetUno } = require('@unocss/preset-uno')
+import { presetUno } from '@unocss/preset-uno'
+import presetRn from '../preset-rn/index.js'
 
 // eslint-disable-next-line
 const remRE = /(-?[\.\d]+)rem/g
 
-module.exports = function presetMpx (options = {}) {
+export default function presetMpx (options = {}) {
+  const mpxCurrentTargetMode = process.env.MPX_CURRENT_TARGET_MODE
+  const isReact = mpxCurrentTargetMode === 'ios' || mpxCurrentTargetMode === 'android'
+  const extraPresets = []
+  if (isReact) {
+    extraPresets.push(presetRn())
+    options.dark = 'media'
+  }
   const uno = presetUno(options)
   const { baseFontSize = 37.5 } = options
+
   return {
     ...uno,
     name: '@mpxjs/unocss-base',
@@ -17,11 +26,12 @@ module.exports = function presetMpx (options = {}) {
       util.entries.forEach((i) => {
         const value = i[1]
         if (typeof value === 'string' && remRE.test(value)) {
-          i[1] = value.replace(remRE, (_, p1) => process.env.MPX_CURRENT_TARGET_MODE === 'web'
+          i[1] = value.replace(remRE, (_, p1) => mpxCurrentTargetMode === 'web'
             ? `${p1 * baseFontSize * (100 / 750).toFixed(8)}vw`
             : `${p1 * baseFontSize}rpx`)
         }
       })
-    }
+    },
+    presets: extraPresets
   }
 }

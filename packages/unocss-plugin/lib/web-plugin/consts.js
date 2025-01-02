@@ -29,7 +29,7 @@ function getLayerPlaceholder (layer) {
   return `#--unocss--{layer:${layer}}`
 }
 
-module.exports = {
+export {
   LAYER_MARK_ALL,
   LAYER_PLACEHOLDER_RE,
   RESOLVED_ID_RE,

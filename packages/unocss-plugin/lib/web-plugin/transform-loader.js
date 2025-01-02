@@ -1,14 +1,13 @@
-const { applyTransformers, isCssId } = require('./utils')
-const parseComponent = require('@mpxjs/webpack-plugin/lib/parser')
-const genComponentTag = require('@mpxjs/webpack-plugin/lib/utils/gen-component-tag')
-const path = require('path')
+import { applyTransformers, isCssId } from './utils.js'
+import parseComponent from '@mpxjs/webpack-plugin/lib/parser.js'
+import genComponentTag from '@mpxjs/webpack-plugin/lib/utils/gen-component-tag.js'
+import * as path from 'path'
 
 async function transform (code, map) {
   const callback = this.async()
   const ctx = this._compiler.__unoCtx
   const mpx = this.getMpx()
   if (!ctx || !mpx) return callback(null, code, map)
-  await ctx.ready
   // 使用resourcePath而不是resource作为id，规避query的影响
   const id = this.resourcePath
   const { extract, transformCache } = ctx
@@ -78,4 +77,4 @@ async function transform (code, map) {
   }
 }
 
-module.exports = transform
+export default transform

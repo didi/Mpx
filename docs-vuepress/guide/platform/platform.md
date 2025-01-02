@@ -11,7 +11,7 @@ Mpx以微信增强DSL为基础，支持跨端输出至多端小程序、web和�
 new MpxwebpackPlugin({
   // mode为mpx编译的目标平台，可选值有(wx|ali|swan|qq|tt|jd|web|ios|android|harmony)
   mode: 'ali',
-  // srcMode为mpx编译的源码平台，目前仅支持wx   
+  // srcMode为mpx编译的源码平台，目前仅支持wx
   srcMode: 'wx'
 })
 ```

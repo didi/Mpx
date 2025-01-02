@@ -1,4 +1,107 @@
 const { headerPlugin } = require('./headerMdPlugin')
+const { presetUno } = require('unocss')
+const UnoCSS = require('@unocss/webpack').default
+
+const unocss = {
+  '/unocss': [
+    {
+      title: 'General',
+      children: [
+        '/unocss/utilities/general/colors',
+       '/unocss/utilities/general/typography',
+        '/unocss/utilities/general/svg',
+       '/unocss/utilities/general/variants',
+      ],
+    },
+    {
+      title: 'Accessibility',
+      children: [
+        '/unocss/utilities/accessibility/screen-readers'
+      ],
+    },
+    {
+      title: 'Animations',
+      children: [
+       '/unocss/utilities/animations/animation',
+       '/unocss/utilities/animations/transforms',
+       '/unocss/utilities/animations/transitions'
+      ],
+    },
+    {
+      title: 'Backgrounds',
+      children: [
+        '/unocss/utilities/backgrounds/background',
+        '/unocss/utilities/backgrounds/gradients',
+        '/unocss/utilities/backgrounds/background-blend-mode'
+      ],
+    },
+    {
+      title: 'Behaviors',
+      children: [
+        '/unocss/utilities/behaviors/box-decoration-break',
+        '/unocss/utilities/behaviors/image-rendering',
+        '/unocss/utilities/behaviors/listings',
+        '/unocss/utilities/behaviors/overflow',
+        '/unocss/utilities/behaviors/overscroll-behavior',
+        '/unocss/utilities/behaviors/placeholder',
+      ],
+    },
+    {
+      title: 'Borders',
+      children: [
+        '/unocss/utilities/borders/border',
+        '/unocss/utilities/borders/divider',
+        '/unocss/utilities/borders/outline',
+        '/unocss/utilities/borders/ring',
+      ],
+    },
+    {
+      title: 'Effects',
+      children: [
+        '/unocss/utilities/effects/box-shadow',
+        '/unocss/utilities/effects/opacity',
+        '/unocss/utilities/effects/mix-blend-mode',
+      ],
+    },
+    {
+      title: 'Filters',
+      children: [
+        '/unocss/utilities/filters/filter',
+        '/unocss/utilities/filters/backdrop-filter',
+      ],
+    },
+    {
+      title: 'Interactivity',
+      children: [
+        '/unocss/utilities/interactivity/accent-color',
+        '/unocss/utilities/interactivity/appearance',
+        '/unocss/utilities/interactivity/cursor',
+        '/unocss/utilities/interactivity/caret',
+        '/unocss/utilities/interactivity/pointer-events',
+        '/unocss/utilities/interactivity/resize',
+        '/unocss/utilities/interactivity/scroll-behavior',
+        '/unocss/utilities/interactivity/touch-action',
+        '/unocss/utilities/interactivity/user-select',
+        '/unocss/utilities/interactivity/will-change',
+      ],
+    },
+    {
+      title: 'Layout',
+      children: [
+        // { title: 'Aspect Ratio', link: '/unocss/utilities/layout/aspect-ratio' },
+        '/unocss/utilities/layout/columns',
+        '/unocss/utilities/layout/container',
+        '/unocss/utilities/layout/display',
+        '/unocss/utilities/layout/flexbox',
+        '/unocss/utilities/layout/grid',
+        '/unocss/utilities/layout/positioning',
+        '/unocss/utilities/layout/sizing',
+        '/unocss/utilities/layout/spacing',
+        '/unocss/utilities/layout/tables',
+      ],
+    },
+  ]
+}
 
 const sidebar = {
   '/guide/': [
@@ -119,7 +222,8 @@ const sidebar = {
     { title: '小程序跨端组件库 Mpx-cube-ui 开源啦', path: 'mpx-cube-ui' },
     { title: 'Mpx-cli 插件化改造', path: 'mpx-cli-next' },
     { title: 'Mpx 小程序单元测试能力建设与实践', path: 'unit-test'}
-  ]
+  ],
+  ...unocss
 }
 
 const nav = [
@@ -178,6 +282,27 @@ module.exports = {
   chainWebpack: (config, isServer) => {
     // 添加node_modules避免resolve错误
     config.resolve.modules.add('node_modules')
+    config.module.rule('vue').uses.delete('cache-loader')
+    config.module.rule('tsx').uses.delete('cache-loader')
+    config.merge({
+      cache: false
+    })
+    config.plugin('extract-css').use(require('mini-css-extract-plugin'), [
+      {
+        filename: '[name].css',
+        chunkFilename: '[name].[hash:9].css'
+      }
+    ])
+  },
+  configureWebpack: {
+    plugins: [
+      UnoCSS({
+        presets: [
+          presetUno()
+        ],
+        configFile: false
+      })
+    ]
   },
   markdown: {
     // markdown-it-toc 的选项

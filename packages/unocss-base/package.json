@@ -6,6 +6,7 @@
   "directories": {
     "lib": "lib"
   },
+  "type": "module",
   "scripts": {},
   "author": "",
   "license": "Apache-2.0",
@@ -14,6 +15,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@unocss/preset-uno": "^0.52.7"
+    "@unocss/preset-uno": "^0.65.1"
   }
 }

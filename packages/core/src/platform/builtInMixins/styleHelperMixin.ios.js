@@ -1,5 +1,5 @@
 import { isObject, isArray, dash2hump, cached, isEmptyObject } from '@mpxjs/utils'
-import { Dimensions, StyleSheet } from 'react-native'
+import { Dimensions, StyleSheet, Appearance } from 'react-native'
 
 let { width, height } = Dimensions.get('screen')
 
@@ -42,35 +42,6 @@ function formatValue (value) {
 }
 
 global.__formatValue = formatValue
-
-const escapeReg = /[()[\]{}#!.:,%'"+$]/g
-const escapeMap = {
-  '(': '_pl_',
-  ')': '_pr_',
-  '[': '_bl_',
-  ']': '_br_',
-  '{': '_cl_',
-  '}': '_cr_',
-  '#': '_h_',
-  '!': '_i_',
-  '/': '_s_',
-  '.': '_d_',
-  ':': '_c_',
-  ',': '_2c_',
-  '%': '_p_',
-  '\'': '_q_',
-  '"': '_dq_',
-  '+': '_a_',
-  $: '_si_'
-}
-
-const mpEscape = cached((str) => {
-  return str.replace(escapeReg, function (match) {
-    if (escapeMap[match]) return escapeMap[match]
-    // unknown escaped
-    return '_u_'
-  })
-})
 
 function concat (a = '', b = '') {
   return a ? b ? (a + ' ' + b) : a : b
@@ -170,17 +141,19 @@ export default function styleHelperMixin () {
       __getStyle (staticClass, dynamicClass, staticStyle, dynamicStyle, hide) {
         const result = {}
         const classMap = this.__getClassMap?.() || {}
+        const unoClassMap = global.__getUnoClassMap?.() || {}
         const appClassMap = global.__getAppClassMap?.() || {}
 
         if (staticClass || dynamicClass) {
-          // todo 当前为了复用小程序unocss产物，暂时进行mpEscape，等后续正式支持unocss后可不进行mpEscape
-          const classString = mpEscape(concat(staticClass, stringifyDynamicClass(dynamicClass)))
+          const classString = concat(staticClass, stringifyDynamicClass(dynamicClass))
           classString.split(/\s+/).forEach((className) => {
             if (classMap[className]) {
               Object.assign(result, classMap[className])
             } else if (appClassMap[className]) {
               // todo 全局样式在每个页面和组件中生效，以支持全局原子类，后续支持样式模块复用后可考虑移除
               Object.assign(result, appClassMap[className])
+            } else if (unoClassMap[className]) {
+              Object.assign(result, unoClassMap[className])
             } else if (isObject(this.__props[className])) {
               // externalClasses必定以对象形式传递下来
               Object.assign(result, this.__props[className])
@@ -198,8 +171,37 @@ export default function styleHelperMixin () {
             display: 'none'
           })
         }
-
         return isEmptyObject(result) ? empty : result
+      },
+      __getDynamicClass (dynamicClass, mediaQueryClass) {
+        return [dynamicClass, this.__getMediaQueryClass(mediaQueryClass)]
+      },
+      __getMediaQueryClass (mediaQueryClass = []) {
+        if (!mediaQueryClass.length) return ''
+        const { width, height } = Dimensions.get('screen')
+        const colorScheme = Appearance.getColorScheme()
+        const { entries, entriesMap } = global.__getUnoBreakpoints()
+        return mediaQueryClass.map(([className, querypoints = []]) => {
+          const res = querypoints.every(([prefix = '', point = 0]) => {
+            if (prefix === 'landscape') return width > height
+            if (prefix === 'portrait') return width <= height
+            if (prefix === 'dark') return colorScheme === 'dark'
+            if (prefix === 'light') return colorScheme === 'light'
+            const size = formatValue(entriesMap[point] || point)
+            const index = entries.findIndex(item => item[0] === point)
+            const isGtPrefix = prefix.startsWith('min-')
+            const isLtPrefix = prefix.startsWith('lt-') || prefix.startsWith('<') || prefix.startsWith('max-')
+            const isAtPrefix = prefix.startsWith('at-') || prefix.startsWith('~')
+            if (isGtPrefix) return width > size
+            if (isLtPrefix) return width < size
+            if (isAtPrefix && (index && index < entries.length - 1)) {
+              return width >= size && width < formatValue(entries[index + 1][1])
+            }
+            return width > size
+          })
+
+          return res ? className : ''
+        })
       }
     }
   }

@@ -1,4 +1,4 @@
-const { parseMustache, stringifyAttr } = require('@mpxjs/webpack-plugin/lib/template-compiler/compiler')
+import { parseMustache, stringifyAttr } from '@mpxjs/webpack-plugin/lib/template-compiler/compiler.js'
 
 function parseClasses (content) {
   const output = []
@@ -78,7 +78,7 @@ function parseStrings (content) {
   return output
 }
 
-module.exports = {
+export {
   parseClasses,
   parseStrings,
   parseComments,

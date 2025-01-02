@@ -7,26 +7,29 @@ const numberRegExp = /^\s*(-?\d+(\.\d+)?)(px)?\s*$/
 const hairlineRegExp = /^\s*hairlineWidth\s*$/
 const varRegExp = /^--/
 const cssPrefixExp = /^-(webkit|moz|ms|o)-/
-function getClassMap ({ content, filename, mode, srcMode, warn, error }) {
-  const classMap = {}
 
-  const root = postcss.parse(content, {
-    from: filename
-  })
-
-  function formatValue (value) {
+function createFormatValue (formatValueFn) {
+  formatValueFn = formatValueFn || 'global.__formatValue'
+  return function (value) {
     let matched
     let needStringify = true
     if ((matched = numberRegExp.exec(value))) {
       value = matched[1]
       needStringify = false
     } else if (unitRegExp.test(value) || hairlineRegExp.test(value)) {
-      value = `global.__formatValue(${JSON.stringify(value)})`
+      value = `${formatValueFn}(${JSON.stringify(value)})`
       needStringify = false
     }
     return needStringify ? JSON.stringify(value) : value
   }
+}
 
+function getClassMap ({ content, filename, mode, srcMode, warn, error, formatValueFn }) {
+  const classMap = {}
+  const formatValue = createFormatValue(formatValueFn)
+  const root = postcss.parse(content, {
+    from: filename
+  })
   const rulesRunner = getRulesRunner({
     mode,
     srcMode,
@@ -76,6 +79,8 @@ function getClassMap ({ content, filename, mode, srcMode, warn, error }) {
       selectors.each(selector => {
         if (selector.nodes.length === 1 && selector.nodes[0].type === 'class') {
           classMapKeys.push(selector.nodes[0].value)
+        } else if (selector.nodes.length === 2 && selector.nodes[0].type === 'class' && selector.nodes[1].type === 'pseudo') {
+          classMapKeys.push(selector.nodes[0].value + selector.nodes[1].value)
         } else {
           error('Only single class selector is supported in react native mode temporarily.')
         }
@@ -94,5 +99,7 @@ function getClassMap ({ content, filename, mode, srcMode, warn, error }) {
 }
 
 module.exports = {
-  getClassMap
+  getClassMap,
+  unitRegExp,
+  numberRegExp
 }

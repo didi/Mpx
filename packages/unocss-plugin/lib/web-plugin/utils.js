@@ -1,9 +1,9 @@
-const pluginutils = require('@rollup/pluginutils')
-const config = require('@unocss/config')
-const core = require('@unocss/core')
-const node_path = require('node:path')
-const MagicString = require('magic-string')
-const remapping = require('@ampproject/remapping')
+import * as pluginutils from '@rollup/pluginutils'
+import * as config from '@unocss/config'
+import * as core from '@unocss/core'
+import nodePath from 'path'
+import MagicString from 'magic-string'
+import remapping from '@ampproject/remapping'
 
 const INCLUDE_COMMENT = '@unocss-include'
 const IGNORE_COMMENT = '@unocss-ignore'
@@ -15,52 +15,48 @@ const sfcIdRE = /\.(vue|mpx)($|\?)/
 const templateIdRE = /\.(wxml|axml|swan|qml|ttml|qxml|jxml|ddml|html)($|\?)/
 const cssIdRE = /\.(wxss|acss|css|qss|ttss|jxss|ddss)($|\?)/
 
-function createContext (configOrPath, defaults = {}, extraConfigSources = []) {
+async function createContext (configOrPath, defaults = {}, extraConfigSources = []) {
   const root = process.cwd()
   let rawConfig = {}
-  const uno = core.createGenerator(rawConfig, defaults)
+
+  const uno = await core.createGenerator(rawConfig, defaults)
   let rollupFilter = pluginutils.createFilter(defaultInclude, defaultExclude)
   const idFilter = pluginutils.createFilter([sfcIdRE, templateIdRE, cssIdRE, core.cssIdRE])
-  const ready = reloadConfig()
 
-  async function reloadConfig () {
-    const result = await config.loadConfig(root, configOrPath, extraConfigSources, defaults)
-    rawConfig = result.config
-    uno.setConfig(rawConfig)
-    rollupFilter = pluginutils.createFilter(
-      rawConfig.include || defaultInclude,
-      rawConfig.exclude || defaultExclude
-    )
-    const presets = /* @__PURE__ */ new Set()
-    uno.config.presets.forEach((i) => {
-      if (!i.name) {
-        return
-      }
-      if (presets.has(i.name)) {
-        console.warn(`[unocss] duplication of preset ${i.name} found, there might be something wrong with your config.`)
-      } else {
-        presets.add(i.name)
-      }
-    })
-
-    const transformers = uno.config.transformers
-    if (transformers) {
-      const pre = []
-      const normal = []
-      const post = []
-      transformers.forEach(i => {
-        if (i.enforce === 'pre') pre.push(i)
-        else if (i.enforce === 'post') post.push(i)
-        else normal.push(i)
-      })
-      uno.config.transformers = [
-        ...pre,
-        ...normal,
-        ...post
-      ]
+  const result = await config.loadConfig(root, configOrPath, extraConfigSources, defaults)
+  rawConfig = result.config
+  uno.setConfig(rawConfig)
+  rollupFilter = pluginutils.createFilter(
+    rawConfig.include || defaultInclude,
+    rawConfig.exclude || defaultExclude
+  )
+  const presets = /* @__PURE__ */ new Set()
+  uno.config.presets.forEach((i) => {
+    if (!i.name) {
+      return
     }
+    if (presets.has(i.name)) {
+      console.warn(`[unocss] duplication of preset ${i.name} found, there might be something wrong with your config.`)
+    } else {
+      presets.add(i.name)
+    }
+  })
 
-    return result
+  const transformers = uno.config.transformers
+  if (transformers) {
+    const pre = []
+    const normal = []
+    const post = []
+    transformers.forEach(i => {
+      if (i.enforce === 'pre') pre.push(i)
+      else if (i.enforce === 'post') post.push(i)
+      else normal.push(i)
+    })
+    uno.config.transformers = [
+      ...pre,
+      ...normal,
+      ...post
+    ]
   }
 
   async function extract (code, id) {
@@ -85,9 +81,6 @@ function createContext (configOrPath, defaults = {}, extraConfigSources = []) {
   }
 
   return {
-    get ready () {
-      return ready
-    },
     filter,
     uno,
     extract,
@@ -128,8 +121,8 @@ async function applyTransformers (ctx, original, id) {
 }
 
 function normalizeAbsolutePath (path) {
-  if (node_path.isAbsolute(path)) {
-    return node_path.normalize(path)
+  if (nodePath.isAbsolute(path)) {
+    return nodePath.normalize(path)
   } else {
     return path
   }
@@ -143,7 +136,7 @@ function isCssId (id) {
   return core.cssIdRE.test(id) || cssIdRE.test(id)
 }
 
-module.exports = {
+export {
   createContext,
   applyTransformers,
   getPath,

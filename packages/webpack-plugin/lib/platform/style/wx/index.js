@@ -163,8 +163,19 @@ module.exports = function getSpec ({ warn, error }) {
     }
     return true
   }
+
+  // 兼容现代的 rgb(1 1 1 / 0.2)/hsl(360 100% 100% / 1.0) 的写法
+  const formatColor = (value) => {
+    const reg = /(rgb|hsl)(\(\s*(\d+\s+\d+\s+\d+(\s*\/\s*[^)]+))\s*\))/
+    value = value.replace(reg, function (match, $1, $2) {
+      return $1 + 'a' + $2
+    })
+    return value
+  }
+
   // prop & value 校验：过滤的不合法的属性和属性值
   const verification = ({ prop, value, selector }, { mode }) => {
+    value = formatColor(value)
     return verifyProps({ prop, value, selector }, { mode }) && verifyValues({ prop, value, selector }) && ({ prop, value })
   }
 
@@ -378,7 +389,7 @@ module.exports = function getSpec ({ warn, error }) {
     const values = parseValues(value)
     const transform = []
     values.forEach(item => {
-      const match = item.match(/([/\w]+)\(([^)]+)\)/)
+      const match = item.match(/(\w+)\(([^()]+|\s*var\([^)]+\))\)/)
       if (match && match.length >= 3) {
         let key = match[1]
         const val = match[2]

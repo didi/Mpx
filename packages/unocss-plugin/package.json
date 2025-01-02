@@ -3,6 +3,7 @@
   "version": "2.9.69",
   "description": "mpx unocss webpack plugin",
   "main": "lib/index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -19,13 +20,13 @@
   "dependencies": {
     "@ampproject/remapping": "^2.2.1",
     "@rollup/pluginutils": "^5.0.2",
-    "@unocss/config": "0.52.7",
-    "@unocss/core": "0.52.7",
-    "@unocss/transformer-directives": "^0.52.1",
-    "@unocss/transformer-variant-group": "^0.52.1",
+    "@unocss/config": "^0.65.1",
+    "@unocss/core": "^0.65.1",
+    "@unocss/transformer-directives": "^0.65.1",
+    "@unocss/transformer-variant-group": "^0.65.1",
     "magic-string": "^0.30.3",
     "minimatch": "^9.0.1",
-    "unocss": "^0.52.7",
+    "unocss": "^0.65.1",
     "webpack-sources": "^3.2.3",
     "webpack-virtual-modules": "^0.6.0"
   }

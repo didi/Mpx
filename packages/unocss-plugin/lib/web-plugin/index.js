@@ -1,19 +1,31 @@
-const WebpackSources = require('webpack-sources')
-const VirtualModulesPlugin = require('webpack-virtual-modules')
-const node_path = require('node:path')
-const process = require('process')
-const fs = require('fs')
-const { createContext, getPath, normalizeAbsolutePath } = require('./utils')
-const { LAYER_MARK_ALL, LAYER_PLACEHOLDER_RE, RESOLVED_ID_RE, getLayerPlaceholder, resolveId, resolveLayer } = require('./consts')
+import WebpackSources from 'webpack-sources'
+import VirtualModulesPlugin from 'webpack-virtual-modules'
+import nodePath, { dirname } from 'path'
+import process from 'process'
+import fs from 'fs'
+import {
+  createContext,
+  getPath,
+  normalizeAbsolutePath
+} from './utils.js'
+import {
+  LAYER_MARK_ALL,
+  LAYER_PLACEHOLDER_RE,
+  RESOLVED_ID_RE,
+  getLayerPlaceholder,
+  resolveId,
+  resolveLayer
+} from './consts.js'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const PLUGIN_NAME = 'unocss:webpack'
-const VIRTUAL_MODULE_PREFIX = node_path.resolve(process.cwd(), '_virtual_')
+const VIRTUAL_MODULE_PREFIX = nodePath.resolve(process.cwd(), '_virtual_')
 
 function WebpackPlugin (configOrPath, defaults) {
   return {
     apply (compiler) {
-      const ctx = createContext(configOrPath, defaults)
-      const { uno, filter, transformCache } = ctx
       const entries = new Set()
       const __vfsModules = new Set()
       let __vfs = null
@@ -27,7 +39,7 @@ function WebpackPlugin (configOrPath, defaults) {
         __vfs = new VirtualModulesPlugin()
         compiler.options.plugins.push(__vfs)
       }
-      compiler.__unoCtx = ctx
+
       // 添加解析虚拟模块插件 import 'uno.css' 并且注入layer代码
       const resolverPlugin = {
         apply (resolver) {
@@ -79,9 +91,9 @@ function WebpackPlugin (configOrPath, defaults) {
           if (data.resource == null) { return [] }
 
           const id = normalizeAbsolutePath(data.resource + (data.resourceQuery || ''))
-          if (filter('', id) && !id.match(/\.html$/) && !RESOLVED_ID_RE.test(id)) {
+          if (compiler.__unoCtx.filter('', id) && !id.match(/\.html$/) && !RESOLVED_ID_RE.test(id)) {
             return [{
-              loader: node_path.resolve(__dirname, './transform-loader')
+              loader: nodePath.resolve(__dirname, './transform-loader')
             }]
           }
 
@@ -91,8 +103,10 @@ function WebpackPlugin (configOrPath, defaults) {
 
       compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
         compilation.hooks.optimizeAssets.tapPromise(PLUGIN_NAME, async () => {
+          const ctx = compiler.__unoCtx
+          const uno = ctx.uno
           // 清空transformCache避免watch修改不生效
-          transformCache.clear()
+          ctx.transformCache.clear()
           const tokens = new Set()
           for (const module of compilation.modules) {
             const assetsInfo = module.buildInfo.assetsInfo || new Map()
@@ -122,9 +136,21 @@ function WebpackPlugin (configOrPath, defaults) {
           }
         })
       })
+
+      compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
+        const mpx = compilation.__mpx__
+        mpx.unoCtx = compiler.__unoCtx.uno
+      })
+
+      compiler.hooks.beforeCompile.tapPromise(PLUGIN_NAME, async (compilation) => {
+        const ctx = await createContext(configOrPath, defaults)
+        compiler.__unoCtx = ctx
+        return ctx
+      })
     }
   }
 }
+
 function getLayer (id) {
   let layer = resolveLayer(getPath(id))
   if (!layer) {
@@ -133,4 +159,7 @@ function getLayer (id) {
   }
   return layer
 }
-module.exports = WebpackPlugin
+
+export {
+  WebpackPlugin as UnoCSSWebpackPlugin
+}

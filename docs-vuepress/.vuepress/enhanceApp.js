@@ -1,3 +1,8 @@
+import a from 'uno.css'
+
+console.log(a);
+
+
 export default ({ router }) => {
   if (typeof process === 'undefined' || process.env.VUE_ENV !== 'server') {
     router.onReady(() => {

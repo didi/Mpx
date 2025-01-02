@@ -1,6 +1,7 @@
-const MagicString = require('magic-string')
-const transformerDirectives = require('@unocss/transformer-directives').default
-const { getReplaceSource } = require('./source')
+import MagicString from 'magic-string'
+import transformerDirectives from '@unocss/transformer-directives'
+import { getReplaceSource } from './source.js'
+
 const escapedReg = /\\(.)/g
 
 function mpEscape (str, escapeMap = {}) {
@@ -81,7 +82,7 @@ async function transformStyle (
   return code
 }
 
-module.exports = {
+export {
   cssRequiresTransform,
   transformGroups,
   mpEscape,

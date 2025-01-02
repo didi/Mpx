@@ -1,33 +1,43 @@
-const path = require('path')
-const { minimatch } = require('minimatch')
-const unoConfig = require('@unocss/config')
-const core = require('@unocss/core')
-const mpxConfig = require('@mpxjs/webpack-plugin/lib/config')
-const toPosix = require('@mpxjs/webpack-plugin/lib/utils/to-posix')
-const fixRelative = require('@mpxjs/webpack-plugin/lib/utils/fix-relative')
-const parseRequest = require('@mpxjs/webpack-plugin/lib/utils/parse-request')
-const { has } = require('@mpxjs/webpack-plugin/lib/utils/set')
-const MpxWebpackPlugin = require('@mpxjs/webpack-plugin')
-const UnoCSSWebpackPlugin = require('./web-plugin')
-const transformerDirectives = require('@unocss/transformer-directives').default
-const transformerVariantGroup = require('@unocss/transformer-variant-group')
-const {
+import * as path from 'path'
+import { minimatch } from 'minimatch'
+import * as unoConfig from '@unocss/config'
+import * as core from '@unocss/core'
+import mpxConfig from '@mpxjs/webpack-plugin/lib/config.js'
+import toPosix from '@mpxjs/webpack-plugin/lib/utils/to-posix.js'
+import fixRelative from '@mpxjs/webpack-plugin/lib/utils/fix-relative.js'
+import parseRequest from '@mpxjs/webpack-plugin/lib/utils/parse-request.js'
+import set from '@mpxjs/webpack-plugin/lib/utils/set.js'
+import env from '@mpxjs/webpack-plugin/lib/utils/env.js'
+import MpxWebpackPlugin from '@mpxjs/webpack-plugin'
+import { UnoCSSWebpackPlugin } from './web-plugin/index.js'
+import { UnoCSSRNWebpackPlugin } from './rn-plugin/index.js'
+import transformerDirectives from '@unocss/transformer-directives'
+import transformerVariantGroup from '@unocss/transformer-variant-group'
+import {
   parseClasses,
   parseStrings,
   parseMustache,
   stringifyAttr,
   parseComments,
   parseCommentConfig
-} = require('./parser')
-const { getReplaceSource, getConcatSource, getRawSource } = require('./source')
-const {
+} from './parser.js'
+import {
+  getReplaceSource,
+  getConcatSource,
+  getRawSource
+} from './source.js'
+import {
   transformStyle,
   buildAliasTransformer,
   transformGroups,
   mpEscape,
   cssRequiresTransform
-} = require('./transform')
-const platformPreflightsMap = require('./platform')
+} from './transform.js'
+import platformPreflightsMap from './platform.js'
+
+const { has } = set
+const { isWeb, isReact } = env
+
 const PLUGIN_NAME = 'MpxUnocssPlugin'
 
 function filterFile (file, scan) {
@@ -210,7 +220,7 @@ class MpxUnocssPlugin {
     sources.forEach((item) => {
       compilation.fileDependencies.add(item)
       // fix jiti require cache for watch
-      delete require.cache[item]
+      // delete require.cache[item]
     })
 
     const platformPreflights = platformPreflightsMap[mode] || []
@@ -234,11 +244,12 @@ class MpxUnocssPlugin {
       return
     }
     const mode = this.mode = mpxPluginInstance.options.mode
-    if (mode === 'web') {
+    if (isWeb(mode) || isReact(mode)) {
       const { webOptions } = this.options
-      if (!getPlugin(compiler, UnoCSSWebpackPlugin)) {
+      const WebpackPlugin = isReact(mode) ? UnoCSSRNWebpackPlugin : UnoCSSWebpackPlugin
+      if (!getPlugin(compiler, WebpackPlugin)) {
         // todo 考虑使用options.config/configFiles读取配置对象后再与webOptions合并后传递给UnoCSSWebpackPlugin，保障读取的config对象与mp保持一致
-        compiler.options.plugins.push(new UnoCSSWebpackPlugin(webOptions))
+        compiler.options.plugins.push(new WebpackPlugin(webOptions))
       }
       compiler.hooks.done.tap(PLUGIN_NAME, ({ compilation }) => {
         for (const dep of compilation.fileDependencies) {
@@ -256,7 +267,7 @@ class MpxUnocssPlugin {
     }, (compilation) => {
       const { __mpx__: mpx } = compilation
       mpx.hasUnoCSS = true
-      if (mode === 'web') return
+      if (isWeb(mode) || isReact(mode)) return
       compilation.hooks.processAssets.tapPromise({
         name: PLUGIN_NAME,
         stage: compilation.PROCESS_ASSETS_STAGE_ADDITIONS
@@ -524,4 +535,4 @@ class MpxUnocssPlugin {
   }
 }
 
-module.exports = MpxUnocssPlugin
+export default MpxUnocssPlugin
