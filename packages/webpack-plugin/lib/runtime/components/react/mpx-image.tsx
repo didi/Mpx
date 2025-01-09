@@ -403,32 +403,48 @@ const Image = forwardRef<HandlerRef<RNImage, ImageProps>, ImageProps>((props, re
     }
   )
 
-  return createElement(View, innerProps,
-    isSvg
-      ? createElement(SvgCssUri, {
-        uri: src,
-        onLayout: onSvgLoad,
-        onError: binderror && onSvgError,
-        style: extendObject(
-          { transformOrigin: 'top left' },
-          modeStyle
-        )
-      })
-      : loaded && renderImage({
-        source: { uri: src },
-        resizeMode: resizeMode,
-        onLoad: bindload && onImageLoad,
-        onError: binderror && onImageError,
-        style: extendObject(
-          {
-            transformOrigin: 'top left',
-            width: isCropMode ? imageWidth : '100%',
-            height: isCropMode ? imageHeight : '100%'
-          },
-          isCropMode ? modeStyle : {}
-        )
-      }, enableFastImage)
+  const createBaseImage = (innerProps = {}) => {
+    return renderImage(
+      extendObject(
+        {
+          source: { uri: src },
+          resizeMode: resizeMode,
+          onLoad: bindload && onImageLoad,
+          onError: binderror && onImageError,
+          style: extendObject(
+            {
+              transformOrigin: 'top left',
+              width: isCropMode ? imageWidth : '100%',
+              height: isCropMode ? imageHeight : '100%'
+            },
+            isCropMode ? modeStyle : {}
+          )
+        },
+        innerProps
+      ),
+      enableFastImage
+    )
+  }
+
+  const SvgImage = createElement(
+    View,
+    innerProps,
+    createElement(SvgCssUri, {
+      uri: src,
+      onLayout: onSvgLoad,
+      onError: binderror && onSvgError,
+      style: extendObject(
+        { transformOrigin: 'top left' },
+        modeStyle
+      )
+    })
   )
+
+  const BaseImage = createBaseImage(innerProps)
+
+  const LayoutImage = createElement(View, innerProps, loaded && createBaseImage())
+
+  return isSvg ? SvgImage : isLayoutMode ? LayoutImage : BaseImage
 })
 
 Image.displayName = 'mpx-image'
