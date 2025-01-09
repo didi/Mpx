@@ -1,14 +1,8 @@
 import { callWithErrorHandling, isFunction, isObject, warn } from '@mpxjs/utils'
 import { currentInstance } from '../../core/proxy'
 
-const providesMap = {
-  /** 全局 scope */
-  __app: Object.create(null),
-  /** 页面 scope */
-  __pages: Object.create(null)
-}
-
-global.__mpxProvidesMap = providesMap
+/** 全局 scope */
+let appProvides = Object.create(null)
 
 /** @internal createApp() 初始化应用层 scope provide */
 export function initAppProvides (provideOpt, instance) {
@@ -17,22 +11,20 @@ export function initAppProvides (provideOpt, instance) {
       ? callWithErrorHandling(provideOpt.bind(instance), instance, 'createApp provide function')
       : provideOpt
     if (isObject(provided)) {
-      providesMap.__app = provided
+      appProvides = provided
     } else {
       warn('App provides must be an object or a function that returns an object.')
     }
   }
 }
 
-function resolvePageId (context) {
-  if (context && isFunction(context.getPageId)) {
-    return context.getPageId()
+function resolveProvides (vm) {
+  const provides = vm.provides
+  const parentProvides = vm.parent && vm.parent.provides
+  if (parentProvides === provides) {
+    return (vm.provides = Object.create(parentProvides))
   }
-}
-
-function resolvePageProvides (context) {
-  const pageId = resolvePageId(context)
-  return providesMap.__pages[pageId] || (providesMap.__pages[pageId] = Object.create(null))
+  return provides
 }
 
 export function provide (key, value) {
@@ -41,8 +33,7 @@ export function provide (key, value) {
     warn('provide() can only be used inside setup().')
     return
   }
-  // 小程序无法实现组件父级引用，所以 provide scope 设置为组件所在页面
-  const provides = resolvePageProvides(instance.target)
+  const provides = resolveProvides(instance)
   provides[key] = value
 }
 
@@ -52,11 +43,11 @@ export function inject (key, defaultValue, treatDefaultAsFactory = false) {
     warn('inject() can only be used inside setup()')
     return
   }
-  const provides = resolvePageProvides(instance.target)
-  if (key in provides) {
+  const provides = instance.parent && instance.parent.provides
+  if (provides && key in provides) {
     return provides[key]
-  } else if (key in providesMap.__app) {
-    return providesMap.__app[key]
+  } else if (key in appProvides) {
+    return appProvides[key]
   } else if (arguments.length > 1) {
     return treatDefaultAsFactory && isFunction(defaultValue)
       ? defaultValue.call(instance && instance.target)
