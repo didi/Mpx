@@ -34,26 +34,38 @@ function resolvePath (relative, base) {
   return stack.join('/')
 }
 
+let toPending = false
 function navigateTo (options = {}) {
-  const navigation = Object.values(global.__mpxPagesMap || {})[0]?.[1]
+  if (toPending) {
+    return
+  }
+  toPending = true
   const navigationHelper = global.__navigationHelper
+  const navigation = Object.values(global.__mpxPagesMap || {})[0]?.[1]
   if (navigation && navigationHelper) {
     const { path, queryObj } = parseUrl(options.url)
     const basePath = getBasePath(navigation)
     const finalPath = resolvePath(path, basePath).slice(1)
     navigation.push(finalPath, queryObj)
     navigationHelper.lastSuccessCallback = () => {
+      toPending = false
       const res = { errMsg: 'navigateTo:ok' }
       successHandle(res, options.success, options.complete)
     }
     navigationHelper.lastFailCallback = (msg) => {
+      toPending = false
       const res = { errMsg: `navigateTo:fail ${msg}` }
       failHandle(res, options.fail, options.complete)
     }
   }
 }
 
+let redirectPending = false
 function redirectTo (options = {}) {
+  if (redirectPending) {
+    return
+  }
+  redirectPending = true
   const navigation = Object.values(global.__mpxPagesMap || {})[0]?.[1]
   const navigationHelper = global.__navigationHelper
   if (navigation && navigationHelper) {
@@ -62,17 +74,24 @@ function redirectTo (options = {}) {
     const finalPath = resolvePath(path, basePath).slice(1)
     navigation.replace(finalPath, queryObj)
     navigationHelper.lastSuccessCallback = () => {
+      redirectPending = false
       const res = { errMsg: 'redirectTo:ok' }
       successHandle(res, options.success, options.complete)
     }
     navigationHelper.lastFailCallback = (msg) => {
+      redirectPending = false
       const res = { errMsg: `redirectTo:fail ${msg}` }
       failHandle(res, options.fail, options.complete)
     }
   }
 }
 
+let backPending = false
 function navigateBack (options = {}) {
+  if (backPending) {
+    return
+  }
+  backPending = true
   const navigation = Object.values(global.__mpxPagesMap || {})[0]?.[1]
   const navigationHelper = global.__navigationHelper
   if (navigation && navigationHelper) {
@@ -80,16 +99,19 @@ function navigateBack (options = {}) {
     const routeLength = navigation.getState().routes.length
     if (delta >= routeLength && global.__mpx?.config.rnConfig.onAppBack?.(delta - routeLength + 1)) {
       nextTick(() => {
+        backPending = false
         const res = { errMsg: 'navigateBack:ok' }
         successHandle(res, options.success, options.complete)
       })
     } else {
       navigation.pop(delta)
       navigationHelper.lastSuccessCallback = () => {
+        backPending = false
         const res = { errMsg: 'navigateBack:ok' }
         successHandle(res, options.success, options.complete)
       }
       navigationHelper.lastFailCallback = (msg) => {
+        backPending = false
         const res = { errMsg: `navigateBack:fail ${msg}` }
         failHandle(res, options.fail, options.complete)
       }
@@ -97,7 +119,12 @@ function navigateBack (options = {}) {
   }
 }
 
+let reLaunchPending = false
 function reLaunch (options = {}) {
+  if (reLaunchPending) {
+    return
+  }
+  reLaunchPending = true
   const navigation = Object.values(global.__mpxPagesMap || {})[0]?.[1]
   const navigationHelper = global.__navigationHelper
   if (navigation && navigationHelper) {
@@ -114,10 +141,12 @@ function reLaunch (options = {}) {
       ]
     })
     navigationHelper.lastSuccessCallback = () => {
+      reLaunchPending = false
       const res = { errMsg: 'redirectTo:ok' }
       successHandle(res, options.success, options.complete)
     }
     navigationHelper.lastFailCallback = (msg) => {
+      reLaunchPending = false
       const res = { errMsg: `redirectTo:fail ${msg}` }
       failHandle(res, options.fail, options.complete)
     }

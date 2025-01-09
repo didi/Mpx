@@ -1,12 +1,12 @@
 import { View, Text, Image, StyleSheet, ActivityIndicator, Dimensions } from 'react-native'
 import { successHandle, failHandle } from '../../../common/js'
-import { Portal } from '@ant-design/react-native'
+import Portal from '@mpxjs/webpack-plugin/lib/runtime/components/react/dist/mpx-portal'
 
 let toastKey
 let isLoadingShow
 const dimensionsScreen = Dimensions.get('screen')
 const screenHeight = dimensionsScreen.height
-const contentTop = parseInt(screenHeight * 0.35)
+const contentTop = parseInt(screenHeight * 0.4)
 let tId // show duration 计时id
 const styles = StyleSheet.create({
   toastContent: {

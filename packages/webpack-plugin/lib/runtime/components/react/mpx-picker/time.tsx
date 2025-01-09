@@ -1,5 +1,6 @@
 import { View, Text, Modal, TouchableWithoutFeedback } from 'react-native'
-import { PickerView, Portal } from '@ant-design/react-native'
+import Portal from '../mpx-portal'
+import { PickerView } from '@ant-design/react-native'
 import React, { forwardRef, useState, useRef, useEffect } from 'react'
 import useNodesRef, { HandlerRef } from '../useNodesRef' // 引入辅助函数
 import { TimeProps } from './type'

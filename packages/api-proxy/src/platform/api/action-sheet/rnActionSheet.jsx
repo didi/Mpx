@@ -1,14 +1,22 @@
-import { View, TouchableHighlight, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet } from 'react-native'
 import { successHandle, failHandle } from '../../../common/js'
-import { Portal } from '@ant-design/react-native'
+import Portal from '@mpxjs/webpack-plugin/lib/runtime/components/react/dist/mpx-portal'
 import { getWindowInfo } from '../system/rnSystem'
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming
 } from 'react-native-reanimated'
+
 function showActionSheet (options = {}) {
   const { alertText, itemList = [], itemColor = '#000000', success, fail, complete } = options
+  if (itemList.length > 6) {
+    const result = {
+      errMsg: 'showActionSheet:fail parameter error: itemList should not be large than 6'
+    }
+    failHandle(result, fail, complete)
+    return
+  }
   const windowInfo = getWindowInfo()
   const bottom = windowInfo.screenHeight - windowInfo.safeArea.bottom
   let actionSheetKey = null
@@ -64,7 +72,8 @@ function showActionSheet (options = {}) {
 
     offset.value = withTiming(0)
 
-    const selectAction = function (index) {
+    const selectAction = function (index, e) {
+      e.stopPropagation()
       const result = {
         errMsg: 'showActionSheet:ok',
         tapIndex: index
@@ -76,6 +85,8 @@ function showActionSheet (options = {}) {
     const remove = function () {
       if (actionSheetKey) {
         slideOut()
+        Portal.remove(actionSheetKey)
+        actionSheetKey = null
         setTimeout(() => {
           Portal.remove(actionSheetKey)
           actionSheetKey = null
@@ -83,7 +94,8 @@ function showActionSheet (options = {}) {
       }
     }
 
-    const cancelAction = function () {
+    const cancelAction = function (e) {
+      e.stopPropagation()
       const result = {
         errMsg: 'showActionSheet:fail cancel'
       }
@@ -91,17 +103,17 @@ function showActionSheet (options = {}) {
       remove()
     }
     return (
-      <TouchableHighlight underlayColor="rgba(0,0,0,0.6)" activeOpacity={1} onPress={cancelAction} style={styles.actionActionMask}>
-        <Animated.View style={[styles.actionSheetContent, animatedStyles]} >
+      <View onTouchEnd={cancelAction} style={styles.actionActionMask}>
+        <Animated.View style={[styles.actionSheetContent, animatedStyles]}>
           { alertText ? <View style={ styles.itemStyle }><Text style={[styles.itemTextStyle, { color: '#666666' }]}>{alertText}</Text></View> : null }
-          { itemList.map((item, index) => <TouchableHighlight key={index} underlayColor="#ececec" onPress={() => selectAction(index)} style={ [styles.itemStyle, itemList.length -1 === index ? {
+          { itemList.map((item, index) => <View key={index} onTouchEnd={(e) => selectAction(index, e)} style={ [styles.itemStyle, itemList.length -1 === index ? {
             borderBottomWidth: 6,
             borderBottomStyle: 'solid',
             borderBottomColor: '#f7f7f7'
-          } : {}] }><Text style={[styles.itemTextStyle, { color: itemColor }]}>{item}</Text></TouchableHighlight>) }
-          <View style={styles.buttonStyle}><TouchableOpacity onPress={cancelAction}><Text style={{ color: "#000000", width: "100%", textAlign: "center" }}>取消</Text></TouchableOpacity></View>
+          } : {}] }><Text style={[styles.itemTextStyle, { color: itemColor }]}>{item}</Text></View>) }
+          <View style={styles.buttonStyle} onTouchEnd={cancelAction}><Text style={{ color: "#000000", width: "100%", textAlign: "center" }}>取消</Text></View>
         </Animated.View>
-      </TouchableHighlight>
+      </View>
     )
   }
   
