@@ -11,57 +11,60 @@ function extendEvent (e, extendObj = {}) {
   })
 }
 
-function MpxEvent (layer) {
-  this.targetElement = null
-  this.touches = []
-  this.touchStartX = 0
-  this.touchStartY = 0
-  this.startTimer = null
-  this.needTap = true
-  this.isTouchDevice = document && ('ontouchstart' in document.documentElement)
+function createMpxEvent (layer) {
+  let startTimer = null
+  let needTap = true
+  let touchStartX = 0
+  let touchStartY = 0
+  let targetElement = null
+  const isTouchDevice = document && 'ontouchstart' in document.documentElement
 
-  this.onTouchStart = (event) => {
+  const onTouchStart = (event) => {
     if (event.targetTouches?.length > 1) {
       return true
     }
-    this.touches = event.targetTouches
-    this.targetElement = event.target
-    this.needTap = true
-    this.startTimer = null
-    this.touchStartX = this.touches[0].pageX
-    this.touchStartY = this.touches[0].pageY
-    this.startTimer = setTimeout(() => {
-      this.needTap = false
-      this.sendEvent(this.targetElement, 'longpress', event)
-      this.sendEvent(this.targetElement, 'longtap', event)
+    const touches = event.targetTouches
+    targetElement = event.target
+    needTap = true
+    startTimer = null
+    touchStartX = touches[0].pageX
+    touchStartY = touches[0].pageY
+    startTimer = setTimeout(() => {
+      needTap = false
+      sendEvent(targetElement, 'longpress', event)
+      sendEvent(targetElement, 'longtap', event)
     }, 350)
   }
 
-  this.onTouchMove = (event) => {
+  const onTouchMove = (event) => {
     const touch = event.changedTouches[0]
-    if (Math.abs(touch.pageX - this.touchStartX) > 1 || Math.abs(touch.pageY - this.touchStartY) > 1) {
-      this.needTap = false
-      this.startTimer && clearTimeout(this.startTimer)
-      this.startTimer = null
+    if (
+      Math.abs(touch.pageX - touchStartX) > 1 ||
+      Math.abs(touch.pageY - touchStartY) > 1
+    ) {
+      needTap = false
+      startTimer && clearTimeout(startTimer)
+      startTimer = null
     }
   }
 
-  this.onTouchEnd = (event) => {
+  const onTouchEnd = (event) => {
     if (event.targetTouches?.length > 1) {
       return true
     }
-    this.startTimer && clearTimeout(this.startTimer)
-    this.startTimer = null
-    if (this.needTap) {
-      this.sendEvent(this.targetElement, 'tap', event)
+    startTimer && clearTimeout(startTimer)
+    startTimer = null
+    if (needTap) {
+      sendEvent(targetElement, 'tap', event)
     }
   }
 
-  this.onClick = (event) => {
-    this.targetElement = event.target
-    this.sendEvent(this.targetElement, 'tap', event)
+  const onClick = (event) => {
+    targetElement = event.target
+    sendEvent(targetElement, 'tap', event)
   }
-  this.sendEvent = (targetElement, type, event) => {
+
+  const sendEvent = (targetElement, type, event) => {
     const touchEvent = new CustomEvent(type, {
       bubbles: true,
       cancelable: true
@@ -72,7 +75,6 @@ function MpxEvent (layer) {
       changedTouches,
       touches: changedTouches,
       detail: {
-        // pc端点击事件可能没有changedTouches，所以直接从 event中取
         x: changedTouches[0]?.pageX || event.pageX || 0,
         y: changedTouches[0]?.pageY || event.pageY || 0
       }
@@ -80,28 +82,23 @@ function MpxEvent (layer) {
     targetElement && targetElement.dispatchEvent(touchEvent)
   }
 
-  this.addListener = () => {
-    if (this.isTouchDevice) {
-      layer.addEventListener('touchstart', this.onTouchStart, true)
-      layer.addEventListener('touchmove', this.onTouchMove, true)
-      layer.addEventListener('touchend', this.onTouchEnd, true)
-    } else {
-      layer.addEventListener('click', this.onClick, true)
-    }
+  if (isTouchDevice) {
+    layer.addEventListener('touchstart', onTouchStart, true)
+    layer.addEventListener('touchmove', onTouchMove, true)
+    layer.addEventListener('touchend', onTouchEnd, true)
+  } else {
+    layer.addEventListener('click', onClick, true)
   }
-  this.addListener()
 }
 
 export function initEvent () {
   if (isBrowser && !global.__mpxCreatedEvent) {
     global.__mpxCreatedEvent = true
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      // eslint-disable-next-line no-new
-      new MpxEvent(document.body)
+      createMpxEvent(document.body)
     } else {
       document.addEventListener('DOMContentLoaded', function () {
-        // eslint-disable-next-line no-new
-        new MpxEvent(document.body)
+        createMpxEvent(document.body)
       }, false)
     }
   }

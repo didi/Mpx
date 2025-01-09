@@ -76,7 +76,7 @@ describe('template should transform correct', function () {
   it('should work correct with web mode', function () {
     const input = '<button @click@web="handleClick">获取用户信息</button>'
     const output = compileTemplate(input, { mode: 'web' })
-    expect(output).toBe('<mpx-button @click="handleClick">获取用户信息</mpx-button>')
+    expect(output).toBe("<mpx-button @click='(e)=>__invoke(e, [[\"handleClick\"]])'>获取用户信息</mpx-button>")
   })
 
   it('should work normal if no attr in tag', function () {

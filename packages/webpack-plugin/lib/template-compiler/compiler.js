@@ -1157,6 +1157,49 @@ function getModelConfig (el, match) {
   }
 }
 
+function processEventWeb (el) {
+  const eventConfigMap = {}
+  el.attrsList.forEach(function ({ name, value }) {
+    if (/^@[a-zA-Z]+$/.test(name)) {
+      const parsedFunc = parseFuncStr(value)
+      if (parsedFunc) {
+        if (!eventConfigMap[name]) {
+          eventConfigMap[name] = {
+            configs: []
+          }
+        }
+        eventConfigMap[name].configs.push(
+          Object.assign({ name, value }, parsedFunc)
+        )
+      }
+    }
+  })
+
+  // let wrapper
+  for (const name in eventConfigMap) {
+    const { configs } = eventConfigMap[name]
+    if (!configs.length) continue
+    configs.forEach(({ name }) => {
+      if (name) {
+        // 清空原始事件绑定
+        let has
+        do {
+          has = getAndRemoveAttr(el, name).has
+        } while (has)
+      }
+    })
+    const value = `(e)=>__invoke(e, [${configs.map(
+      (item) => item.expStr
+    )}])`
+    addAttrs(el, [
+      {
+        name,
+        value
+      }
+    ])
+  }
+}
+
 function processEventReact (el) {
   const eventConfigMap = {}
   el.attrsList.forEach(function ({ name, value }) {
@@ -2642,6 +2685,7 @@ function processElement (el, root, options, meta) {
     // 预处理代码维度条件编译
     processIfWeb(el)
     processScoped(el)
+    processEventWeb(el)
     // processWebExternalClassesHack(el, options)
     processExternalClasses(el, options)
     processComponentGenericsWeb(el, options, meta)
