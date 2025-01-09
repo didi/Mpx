@@ -43,7 +43,8 @@ const sidebar = {
         'advance/custom-output-path',
         'advance/utility-first-css',
         'advance/ssr',
-        'advance/provide-inject'
+        'advance/provide-inject',
+        'advance/build-config'
       ]
     },
     {

@@ -31,10 +31,66 @@ npm install
 
 ## 编译构建
 
+相关命令
+
+```json
+{
+  "serve": "mpx-cli-service serve", // 开发模式
+  "build": "mpx-cli-service build" // 构建模式
+}
+```
+
 使用npm script执行mpx的编译构建，在开发模式下我们执行serve命令，将项目源码构建输出到`dist/${平台目录}`下，并且监听源码的改动进行重新编译。
 
 ```shell
 npm run serve
+```
+
+### CLI 命令
+
+#### build
+
+```sh
+用法：mpx-cli-service build [options]
+
+选项:
+
+  --targets    编译目标(默认值: wx)
+  --mode       指定环境模式 development | production (默认值：production)
+  --env        自定义 __mpx_env__
+  --watch      监听文件变化
+  --report     生成包分析报告
+```
+```sh
+# 构建小程序，默认微信
+mpx-cli-service build --targets=wx,ali
+```
+
+**目前支持的平台**
+
+| 平台  | target  |
+|-----|---------|
+| 微信  | wx      |
+| 阿里  | ali     |
+| 百度  | swan    |
+| QQ  | qq      |
+| 头条  | tt      |
+| 浏览器 | web     |
+| 安卓  | android |
+| iOS | ios     |
+| 鸿蒙  | harmony |
+
+
+#### serve
+
+```sh
+用法：mpx-cli-service serve [options]
+
+选项:
+
+  --targets    编译到小程序目标(默认值: wx)
+  --mode       指定环境模式 (默认值：production)
+  --env        自定义 __mpx_env__
 ```
 
 ## 预览调试
@@ -165,6 +221,3 @@ npm run build:cross
 ```
 
 关于跨平台能力的更多详情请查看[这里](../advance/platform.md)
-
-
-
