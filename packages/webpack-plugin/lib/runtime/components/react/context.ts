@@ -55,6 +55,8 @@ export const IntersectionObserverContext = createContext<IntersectionObserver | 
 
 export const RouteContext = createContext<number | null>(null)
 
+export const SwiperContext = createContext({})
+
 export const KeyboardAvoidContext = createContext<KeyboardAvoidContextValue | null>(null)
 
 export const ScrollViewContext = createContext<ScrollViewContextValue>({ gestureRef: null })
