@@ -2,31 +2,68 @@
 
 mpx转RN的对标微信api目前支持及部分的api转换，目前支持的能力可以参考下表：
 
-| 支持方法                   |
-|------------------------|
-| getSystemInfo          |
-| getSystemInfoSync      |
-| getDeviceInfo      |
-| getWindowInfo      |
-| request                |
-| setStorage             |
-| removeStorage          |
-| removeStorageSync      |
-| getStorage             |
-| getStorageInfo         |
-| clearStorage           |
-| clearStorageSync       |
-| setClipboardData       |
-| getClipboardData       |
-| makePhoneCall          |
-| onWindowResize         |
-| offWindowResize        |
-| arrayBufferToBase64    |
-| base64ToArrayBuffer    |
-| connectSocket          |
-| getNetworkType         |
-| onNetworkStatusChange  |
-| offNetworkStatusChange |
+| 支持方法                      |
+|-----------------------------|
+| showActionSheet             |
+| createAnimation             |
+| onAppShow                   |
+| onAppHide                   |
+| offAppShow                  |
+| offAppHide                  |
+| onError                     |
+| offError                    |
+| onUnhandledRejection        |
+| offUnhandledRejection       |
+| createIntersectionObserver  |
+| createSelectorQuery         |
+| getImageInfo                |
+| onKeyboardHeightChange      |
+| offKeyboardHeightChange     |
+| hideKeyboard                |
+| getLocation                 |
+| makePhoneCall               |
+| showModal                   |
+| nextTick                    |
+| getSystemInfo               |
+| getSystemInfoSync           |
+| getLaunchOptionsSync        |
+| getEnterOptionsSync         |
+| getDeviceInfo               |
+| getWindowInfo               |
+| request                     |
+| redirectTo                  |
+| navigateTo                  |
+| navigateBack                |
+| reLaunch                    |
+| switchTab                   |
+| getScreenBrightness         |
+| setScreenBrightness         |
+| setNavigationBarTitle       |
+| setNavigationBarColor       |
+| setStorage                  |
+| removeStorage               |
+| removeStorageSync           |
+| getStorage                  |
+| getStorageInfo              |
+| clearStorage                |
+| clearStorageSync            |
+| setClipboardData            |
+| getClipboardData            |
+| makePhoneCall               |
+| onWindowResize              |
+| offWindowResize             |
+| arrayBufferToBase64         |
+| base64ToArrayBuffer         |
+| connectSocket               |
+| getNetworkType              |
+| onNetworkStatusChange       |
+| offNetworkStatusChange      |
+| showToast                   |
+| hideToast                   |
+| showLoading                 |
+| hideLoading                 |
+| vibrateShort                |
+| vibrateLong                 |
 
 # 使用说明
 
@@ -61,6 +98,26 @@ mpx.showModal({
 
 对于一些微信独有的返回结果，或者RN目前不能支持的入参/返回结果，在下面会有详细说明：
 
+### getImageInfo
+
+| 不支持返回值                 |
+|------------------------|
+| path          |
+| orientation          |
+| type          |
+
+### getLocation
+
+| 不支持入参       |
+|-------------|
+| type        |
+| altitude |
+| highAccuracyExpireTime        |
+
+| 不支持返回值                 |
+|------------------------|
+| horizontalAccuracy          |
+
 ### getSystemInfo/getSystemInfoSync
 
 | 不支持返回值                 |
@@ -94,11 +151,6 @@ mpx.showModal({
 | abi      |
 | cpuType          |
 
-### getWindowInfo
-
-| 不支持返回值                 |
-|------------------------|
-| screenTop          |
 
 ### request
 
