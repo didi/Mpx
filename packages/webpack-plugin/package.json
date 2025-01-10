@@ -93,6 +93,7 @@
     "react-native-reanimated": "^3.15.2",
     "react-native-safe-area-context": "^4.12.0",
     "react-native-svg": "^15.8.0",
+    "react-native-video": "^6.9.0",
     "react-native-webview": "^13.12.2",
     "rimraf": "^6.0.1"
   },

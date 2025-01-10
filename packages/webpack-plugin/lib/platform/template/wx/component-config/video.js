@@ -11,9 +11,21 @@ module.exports = function ({ print }) {
   const aliEventLogError = print({ platform: 'ali', tag: TAG_NAME, isError: false, type: 'event' })
   const qaPropLog = print({ platform: 'qa', tag: TAG_NAME, isError: false })
   const qaEventLogError = print({ platform: 'qa', tag: TAG_NAME, isError: false, type: 'event' })
+  const iosPropLog = print({ platform: 'ios', tag: TAG_NAME, isError: false })
+  const iosEventLogError = print({ platform: 'ios', tag: TAG_NAME, isError: false, type: 'event' })
+  const androidPropLog = print({ platform: 'android', tag: TAG_NAME, isError: false })
+  const androidEventLogError = print({ platform: 'android', tag: TAG_NAME, isError: false, type: 'event' })
   return {
     test: TAG_NAME,
     web (tag, { el }) {
+      el.isBuiltIn = true
+      return 'mpx-video'
+    },
+    android (tag, { el }) {
+      el.isBuiltIn = true
+      return 'mpx-video'
+    },
+    ios (tag, { el }) {
       el.isBuiltIn = true
       return 'mpx-video'
     },
@@ -41,13 +53,20 @@ module.exports = function ({ print }) {
         qq: qqPropLog
       },
       {
-
         test: /^(duration|danmu-list|danmu-btn|enable-danmu|muted|initial-time|page-gesture|direction|show-progress|show-center-play-btn|enable-progress-gesture|show-mute-btn|title|enable-play-gesture|auto-pause-if-navigate|auto-pause-if-open-native|vslide-gesture|vslide-gesture-in-fullscreen|ad-unit-id|poster-for-crawler|show-casting-button|picture-in-picture-mode|picture-in-picture-show-progress|enable-auto-rotation|show-screen-lock-button|show-snapshot-button)$/,
         tt: ttPropLog
       },
       {
         test: /^(duration|danmu-list|danmu-btn|enable-danmu|muted|initial-time|page-gesture|direction|show-progress|show-center-play-btn|enable-progress-gesture|show-mute-btn|enable-play-gesture|auto-pause-if-navigate|auto-pause-if-open-native|vslide-gesture|vslide-gesture-in-fullscreen|ad-unit-id|poster-for-crawler|show-casting-button|picture-in-picture-mode|picture-in-picture-show-progress|enable-auto-rotation|show-screen-lock-button|show-snapshot-button)$/,
         qa: qaPropLog
+      },
+      {
+        test: /^(duration|enable-danmu|danmu-btn|page-gesture|direction|show-progress|show-fullscreen-btn|show-center-play-btn|enable-progress-gesture|show-mute-btn|title|play-btn-position|enable-play-gesture|auto-pause-if-navigate|auto-pause-if-open-native|vslide-gesture|vslide-gesture-in-fullscreen|show-bottom-progress|ad-unit-id|poster-for-crawler|show-casting-button|picture-in-picture-mode|picture-in-picture-show-progress| picture-in-picture-init-position|show-snapshot-button|show-screen-lock-button|show-background-playback-button|background-poster|referrer-policy|is-live)$/,
+        ios: iosPropLog
+      },
+      {
+        test: /^(duration|enable-danmu|danmu-btn|page-gesture|direction|show-progress|show-fullscreen-btn|show-center-play-btn|enable-progress-gesture|show-mute-btn|title|play-btn-position|enable-play-gesture|auto-pause-if-navigate|auto-pause-if-open-native|vslide-gesture|vslide-gesture-in-fullscreen|show-bottom-progress|ad-unit-id|poster-for-crawler|show-casting-button|picture-in-picture-mode|picture-in-picture-show-progress| picture-in-picture-init-position|enable-auto-rotation|show-snapshot-button|show-screen-lock-button|show-background-playback-button|background-poster|referrer-policy|is-live)$/,
+        android: androidPropLog
       }
     ],
     event: [
@@ -82,6 +101,14 @@ module.exports = function ({ print }) {
       {
         test: /^(progress|enterpictureinpicture|leavepictureinpicture|controlstoggle|loadedmetadata|seekcomplete)$/,
         qa: qaEventLogError
+      },
+      {
+        test: /^(progress|controlstoggle|enterpictureinpicture|leavepictureinpicture|castinguserselect|castingstatechange|castinginterrupt)$/,
+        ios: iosEventLogError
+      },
+      {
+        test: /^(progress|enterpictureinpicture|leavepictureinpicture|castinguserselect|castingstatechange|castinginterrupt)$/,
+        android: androidEventLogError
       }
     ]
   }
