@@ -91,7 +91,8 @@ Page({
 ```
 
 ``` js
-Page({
+import { createComponent } from '@mpxjs/core'
+createComponent({
   data: {
     array: [{
       id: 1, text: 'foo'
@@ -126,7 +127,8 @@ Page({
 ```
 
 ``` js
-Page({
+import { createComponent } from '@mpxjs/core'
+createComponent({
   data: {
     array: [{
       id: 1, text: 'foo'
@@ -549,7 +551,8 @@ Mpx提供了 `wx:ref=xxx` 来更方便获取 WXML 节点信息的对象。在JS�
 ```
 
 ```js
-Page({
+import {createPage} from '@mpxjs/core'
+createPage({
   data: {
     show: false
   }
@@ -679,22 +682,28 @@ capture-catch中断捕获阶段和取消冒泡阶段
 
 ## @mode
 
-`type mode = 'wx' | 'ali' | 'qq' | 'swan' | 'tt' | 'web' | 'qa'`
+`type mode = 'wx' | 'ali' | 'qq' | 'swan' | 'tt' | 'web' | 'qa' | 'ios' | 'android' | 'harmony'`
 
+### 属性中使用
 跨平台输出场景下，Mpx 框架允许用户在组件上使用 @ 和 | 符号来指定某个节点或属性只在某些平台下有效。
 
 ```html
 <button
-  open-type@wx|swan="getUserInfo"
-  bindgetuserinfo@wx|swan="getUserInfo"
-  open-type@ali="getAuthorize"
+  open-type@wx|swan|ios="getUserInfo"
+  bindgetuserinfo@wx|swan|ios="getUserInfo"
+  open-type@ali|ios="getAuthorize"
   scope@ali="userInfo"
+  enable-background@ios|android="{{ true }}"
   onTap@ali="onTap">
   获取用户信息
 </button>
 ```
-在上方示例中，开发者可以便捷的设置在支付宝小程序与微信和百度小程序等平台分别生效的 open-type 属性，
-以及事件绑定或其他属性。假设当前 srcMode 为 wx，目标平台为 ali，则输出产物为：
+例如在上述示例中：
+* 在支付宝小程序与微信和百度小程序等平台分别生效的 open-type 等属性
+* 在输出iOS或android平台时，enable-background 属性生效
+* 以及事件绑定或其他属性灵活的进行条件编译
+
+假设当前 srcMode 为 wx，目标平台为 ali，则输出产物为：
 ```html
 <button
   open-type="getAuthorize"
@@ -703,7 +712,23 @@ capture-catch中断捕获阶段和取消冒泡阶段
   获取用户信息
 </button>
 ```
-同时，该指令也可以作用在单个节点上，但需要注意的是，该指令作用在单个节点时，节点仅在目标平台输出，同时节点自身属性不会进行跨平台语法转换，不过其子节点不受影响。
+假设当前 srcMode 为 wx，目标平台为 ios，则输出产物为：
+```html
+<button
+  open-type="getAuthorize"
+  bindgetuserinfo="getUserInfo"
+  open-type="getAuthorize"
+  enable-background="{{ true }}"
+  >
+  获取用户信息
+</button>
+```
+
+### 节点中使用
+同时，该指令也可以作用在单个节点上，来对节点进行跨平台条件判断。
+
+但需要注意的是，该指令作用在单个节点时，节点仅在目标平台输出，同时节点自身属性不会进行跨平台语法转换，不过其子节点不受影响。
+
 ```html
 <!--当srcMode为wx，跨平台输出ali时-->
 <!--错误写法-->
@@ -715,10 +740,17 @@ capture-catch中断捕获阶段和取消冒泡阶段
     <view wx:if="{{flag}}">text</view>
 </view>
 ```
+::: danger
+另外在跨端输出 React Native 和 H5 时，不要在基础组件节点上使用 @mode 指令，仅可在自定义组件节点使用 @mode 指令
+:::
+```html
+<!--错误写法-->
+<view @ios>测试数据</view>
+```
 
 ## @_mode
 
-`type _mode = '_wx' | '_ali' | '_qq' | '_swan' | '_tt' | '_web' | '_qa'`
+`type _mode = '_wx' | '_ali' | '_qq' | '_swan' | '_tt' | '_web' | '_qa' ｜ '_ios' | '_android' | '_harmony'`
 
 有时开发者期望使用 @mode 这种方式仅控制节点的展示，保留节点属性的平台转换能力，为此 Mpx 实现了一个隐式属性条件编译能力。
 ```html
@@ -726,6 +758,8 @@ capture-catch中断捕获阶段和取消冒泡阶段
 <view @_ali bindtap="someClick">test</view>
 ```
 在对应的平台前加一个_，例如@_ali、@_swan、@_tt等，使用该隐式规则仅有条件编译能力，节点属性语法转换能力依旧。
+
+在跨端输出 React Native 和 H5 时，可以在节点上使用该属性。
 
 ## @env
 

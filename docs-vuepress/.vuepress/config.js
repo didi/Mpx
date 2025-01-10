@@ -47,6 +47,16 @@ const sidebar = {
       ]
     },
     {
+      title: '跨端',
+      collapsable: false,
+      children: [
+        'platform/basic',
+        // 'platform/miniprogram',
+        // 'platform/web',
+        'platform/rn'
+      ]
+    },
+    {
       title: '组合式 API',
       collapsable: false,
       children: [
