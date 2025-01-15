@@ -529,12 +529,12 @@ Mpx 输出 React Native 支持以下模版指令。
 ```html
 <template>
  <!--Mpx增强语法，模板内联传参，方便简洁-->
- <view bindtap="handleTapInline('b')">b</view>
+ <view bindtap="handleTapInline('inline')">内联传参</view>
  </template>
  <script setup>
   // 直接通过参数获取数据，直观方便
-  const handleTapInline = (name) => {
-    console.log('name:', name)
+  const handleTapInline = (params) => {
+    console.log('params:', params)
   }
   // ...
 </script>
@@ -552,7 +552,7 @@ Mpx 输出 React Native 支持以下模版指令。
  <script setup>
   import { ref } from '@mpxjs/core'
 
-  const data = ref(['Item 1', 'Item 2', 'Item 3', 'Item 4'])
+  const items = ref(['Item 1', 'Item 2', 'Item 3', 'Item 4'])
   const handleTap_0 = (event) => {
     console.log('Tapped on item 1');
   },
@@ -571,6 +571,8 @@ Mpx 输出 React Native 支持以下模版指令。
 </script>
 ```
 
+更多事件相关内容可以查看 [Mpx 事件处理](../basic/event.md)
+
 注意事项
 
 1. 当同一个元素上同时绑定了 catchtap 和 bindtap 事件时，两个事件都会被触发执行。但是是否阻止事件冒泡的行为,会以模板上第一个绑定的事件标识符为准。
@@ -583,7 +585,7 @@ Mpx 输出 React Native 支持以下模版指令。
 ### 基础组件
 目前 Mpx 输出 React Native 仅支持以下组件，文档中未提及的组件以及组件属性即为不支持，具体使用范围可参考如下文档
 
-RN环境基础组件通用属性
+基础组件通用属性
 
 | 属性名                   | 类型     | 默认值         | 说明                                                       |
 | ----------------------- | ------- | ------------- | ---------------------------------------------------------- |
@@ -592,6 +594,10 @@ RN环境基础组件通用属性
 | parent-font-size		  | Number |         | 父组件字体大小，主要用于百分比计算的场景，如 font-size: 100%|
 | parent-width		  | Number  |         | 父组件宽度，主要用于百分比计算的场景，如 width: calc(100% - 20px)，需要在外部传递父组件的宽度|
 | parent-height		  | Number  |         | 父组件高度，主要用于百分比计算的场景，如 height: calc(100% - 20px),需要在外部传递父组件的高度|
+
+以上基础组件的通用属性仅在 React Native 环境中支持。在跨平台输出到小程序或 Web 时，这些属性将无法使用。
+
+由于 view、text、scroll-view、image 和 input 组件都是基于 React Native 原生组件实现的，因此这些组件默认继承原生组件支持的属性。
 
 #### view
 视图容器。
@@ -602,13 +608,15 @@ RN环境基础组件通用属性
 | hover-class	             | string  |         | 指定按下去的样式类。 |
 | hover-start-time   | number  |     50    | 按住后多久出现点击态，单位毫秒|
 | hover-stay-time	  | number  |     400    | 手指松开后点击态保留时间，单位毫秒	 |
-| enable-offset		  | Number  |     false    | 设置是否要获取组件的布局信息，若设置了该属性，会在 e.target 中返回组件的 offsetLeft、offsetWidth 信息|
+| animation | Object  | undefined  | 传递动画的实例， 可配合mpx.createAnimation方法一起使用|
+| enable-background		  | Boolean  |     false    |  RN环境特有属性，是否要开启background-image、background-size和background-postion的相关计算或渲染，请根据实际情况开启 |
+| enable-animation | Boolean  | false  | RN环境特有属性，开启要开启动画渲染，请根据实际情况开启 |
+| enable-fast-image | Boolean  | false  | RN环境特有属性，开启后将使用 react-native-fast-image 进行图片渲染，请根据实际情况开启 |
 
-事件
+注意事项
 
-| 事件名           | 说明                                                 |
-| ----------------| --------------------------------------------------- |
-| bindtap       |  点击的时候触发   |
+1. 未使用背景图、动图或动画，请不要开启`enable-background`、`enable-animation`或`enable-fast-image`属性，会有一定的性能消耗。
+
 
 
 #### scroll-view
@@ -635,10 +643,9 @@ RN环境基础组件通用属性
 | refresher-triggered     | Boolean | `false`   | 设置当前下拉刷新状态,true 表示已触发               |
 | paging-enabled          | Number  | `false`   | 分页滑动效果 (同时开启 enhanced 属性后生效)，当值为 true 时，滚动条会停在滚动视图的尺寸的整数倍位置  |
 | show-scrollbar          | Number  | `true`   | 滚动条显隐控制 (同时开启 enhanced 属性后生效)|
-| enable-offset          | Number  | `false`   | 设置是否要获取组件的布局信息，若设置了该属性，会在 e.target 中返回组件的 offsetLeft、offsetWidth 信息|
-| enable-trigger-intersection-observer  |  Boolean   |  []    | 是否开启intersection-observer |
-| simultaneous-handlers  | `Array<object>`  |    []    | 主要用于组件嵌套场景，允许多个手势同时识别和处理并触发，这个属性可以指定一个或多个手势处理器，处理器支持使用 this.$refs.xxx 获取组件实例来作为数组参数传递给 scroll-view 组件 |
-| wait-for  |  `Array<object>`   |  []    | 主要用于组件嵌套场景，允许延迟激活处理某些手势，这个属性可以指定一个或多个手势处理器，处理器支持使用 this.$refs.xxx 获取组件实例来作为数组参数传递给 scroll-view 组件 |
+| enable-trigger-intersection-observer  |  Boolean   |  []    | RN环境特有属性，是否开启intersection-observer |
+| simultaneous-handlers  | `Array<object>`  |    []    | RN环境特有属性，主要用于组件嵌套场景，允许多个手势同时识别和处理并触发，这个属性可以指定一个或多个手势处理器，处理器支持使用 this.$refs.xxx 获取组件实例来作为数组参数传递给 scroll-view 组件 |
+| wait-for  |  `Array<object>`   |  []    | RN环境特有属性，主要用于组件嵌套场景，允许延迟激活处理某些手势，这个属性可以指定一个或多个手势处理器，处理器支持使用 this.$refs.xxx 获取组件实例来作为数组参数传递给 scroll-view 组件 |
 
 
 事件
@@ -680,7 +687,6 @@ RN环境基础组件通用属性
 | previous-margin         | String  | `0`                 | 前边距，可用于露出前一项的一小部分，接受px |
 | next-margin             | String  | `0`                 | 后边距，可用于露出后一项的一小部分，接受px |
 | scale                   | Boolean  | `false`            | 滑动时是否开启前后元素缩小,默认是缩放0.7倍, 暂不支持自定义 |
-| enable-offset           | Number  | `false`       | 设置是否要获取组件的布局信息，若设置了该属性，会在 e.target 中返回组件的 offsetLeft、offsetWidth 信息|
 | easing-function         | String  | `linear`      | 支持 linear、easeInCubic、easeOutCubic、easeInOutCubic|
 | bindchange              | eventhandle|   无          | current 改变时会触发 change 事件，event.detail = {current, source}| 
 
@@ -717,9 +723,9 @@ movable-view的可移动区域。
 
 | 属性名 | 类型             | 默认值 | 说明                                                                                                  |
 | ------ | ---------------- | ------ | ----------------------------------------------------------------------------------------------------- |
-| direction   | String           |   none     | 目前支持 all、vertical、horizontal、none｜
-| inertia   | boolean          |   false     | movable-view是否带有惯性｜
-| out-of-bounds   | boolean          |   false     | 超过可移动区域后，movable-view是否还可以移动｜
+| direction   | String           |   none     | 目前支持 all、vertical、horizontal、none  | 
+| inertia   | boolean          |   false     | movable-view是否带有惯性  |
+| out-of-bounds   | boolean          |   false     | 超过可移动区域后，movable-view是否还可以移动  |
 | x   | Number |      | 定义x轴方向的偏移  |
 | y  | Number  |        | 定义y轴方向的偏移 |
 | friction  | Number  |    7    | 摩擦系数 |
@@ -784,16 +790,8 @@ movable-view的可移动区域。
 | 属性名                   | 类型     | 默认值         | 说明                                                       |
 | ----------------------- | ------- | ------------- | ---------------------------------------------------------- |
 | user-select             | boolean  | `false`       | 文本是否可选。 |
-| disable-default-style             | boolean  | `false`       |  会内置默认样式，比如fontSize为16。设置`true`可以禁止默认的内置样式。 |
-| enable-offset		  | Number  |     false    | 设置是否要获取组件的布局信息，若设置了该属性，会在 e.target 中返回组件的 offsetLeft、offsetWidth 信息|
 
 
-事件
-
-
-| 事件名           | 说明                                                 |
-| ----------------| --------------------------------------------------- |
-| bindtap       |  点击的时候触发         |
 
 注意事项
 
@@ -817,7 +815,6 @@ movable-view的可移动区域。
 | hover-class             | String  |               | 指定按钮按下去的样式类。当 hover-class="none" 时，没有点击态效果  |
 | hover-start-time        | Number  |  `20`         | 按住后多久出现点击态，单位毫秒                                  |
 | hover-stay-time         | Number  |  `70`         | 手指松开后点击态保留时间，单位毫秒                               |
-| enable-offset          | Number  | `false`   | 设置是否要获取组件的布局信息，若设置了该属性，会在 e.target 中返回组件的 offsetLeft、offsetWidth 信息|
 
 
 #### label
@@ -914,7 +911,6 @@ movable-view的可移动区域。
 | cursor-color            | String  |               | 光标颜色                                                    |
 | selection-start         | Number  | `-1`          | 光标起始位置，自动聚集时有效，需与 selection-end 搭配使用         |
 | selection-end           | Number  | `-1`          | 光标结束位置，自动聚集时有效，需与 selection-start 搭配使用       |
-| enable-offset          | Number  | `false`   | 设置是否要获取组件的布局信息，若设置了该属性，会在 e.target 中返回组件的 offsetLeft、offsetWidth 信息|
 
 事件
 
@@ -961,7 +957,6 @@ movable-view的可移动区域。
 | cursor-color            | String  |               | 光标颜色                                                    |
 | selection-start         | Number  | `-1`          | 光标起始位置，自动聚集时有效，需与 selection-end 搭配使用         |
 | selection-end           | Number  | `-1`          | 光标结束位置，自动聚集时有效，需与 selection-start 搭配使用       |
-| enable-offset          | Number  | `false`   | 设置是否要获取组件的布局信息，若设置了该属性，会在 e.target 中返回组件的 offsetLeft、offsetWidth 信息|
 
 事件
 
@@ -1116,8 +1111,7 @@ movable-view的可移动区域。
 | ----------------------- | ------- | ------------- | ---------------------------------------------------------- |
 | src                     | String  | `false`       | 图片资源地址及 base64 格式数据 |
 | mode                    | String  | `scaleToFill` | 图片裁剪、缩放的模式，可选值为 `scaleToFill`、`aspectFit`、`aspectFill`、`widthFix`、`heightFix`、`top`、`bottom`、`center`、`left`、`right`、`top left`、`top right`、`bottom left`、`bottom right`             |
-| enable-offset          | Boolean  | `false`   | 设置是否要获取组件的布局信息，若设置了该属性，会在 e.target 中返回组件的 offsetLeft、offsetWidth 信息|
-| enable-fast-image          | Boolean  | `false`   | 开启后将使用 react-native-fast-image 进行图片渲染，请根据实际情况开启 |
+| enable-fast-image          | Boolean  | `false`   | RN环境特有属性，开启后将使用 react-native-fast-image 进行图片渲染，请根据实际情况开启 |
 
 事件
 
@@ -2362,6 +2356,7 @@ import mpx from '@mpxjs/core'
 import apiProxy from '@didi/mpxjs-api-proxy'
 mpx.use(apiProxy, { usePromise: true })
 ```
+
 需要在mpx项目中需要配置externals
 ```bash
 externals: {
@@ -2377,6 +2372,7 @@ externals: {
 },
 ```
 如果引用单独的api-proxy方法这种情况，需要根据下表说明是否用到以下方法，来确定是否需要配置externals，配置参考上面示例
+
 
 | api方法                                                                                                                                                                                              | 依赖的react-native三方库                        |
 |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
@@ -2494,7 +2490,7 @@ webviewBridge.navigateTo({
 ```
 
 ##### invoke示例代码
-对于业务中一些特殊的方法，需要有web与RN进行交互的这种情况，基于这种情况在mpx框架内部提供了挂在方法的能力，在webview-bridge提供了invoke通信的能力，具体使用方法如下：
+对于业务中一些特殊的方法，需要有web与RN进行交互的这种情况，基于这种情况在mpx框架内部提供了挂载方法的能力，在webview-bridge提供了invoke通信的能力，具体使用方法如下：
 
 RN环境中挂载getTime的逻辑
 ```javascript
