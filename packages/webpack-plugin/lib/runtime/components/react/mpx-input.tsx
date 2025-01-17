@@ -149,7 +149,7 @@ const Input = forwardRef<HandlerRef<TextInput, FinalInputProps>, FinalInputProps
     'parent-font-size': parentFontSize,
     'parent-width': parentWidth,
     'parent-height': parentHeight,
-    'adjust-position': adjustPosition = true,
+    'adjust-position': adjustPosition = false,
     bindinput,
     bindfocus,
     bindblur,
@@ -182,6 +182,7 @@ const Input = forwardRef<HandlerRef<TextInput, FinalInputProps>, FinalInputProps
 
   const [inputValue, setInputValue] = useState(defaultValue)
   const [contentHeight, setContentHeight] = useState(0)
+  const [selection, setSelection] = useState({ start: -1, end: -1 })
 
   const styleObj = extendObject(
     { padding: 0, backgroundColor: '#fff' },
@@ -211,11 +212,11 @@ const Input = forwardRef<HandlerRef<TextInput, FinalInputProps>, FinalInputProps
     }
   }, [value])
 
-  const selection = useMemo(() => {
-    if (selectionStart >= 0 && selectionEnd >= 0) {
-      return { start: selectionStart, end: selectionEnd }
-    } else if (typeof cursor === 'number') {
-      return { start: cursor, end: cursor }
+  useEffect(() => {
+    if (typeof cursor === 'number') {
+      setSelection({ start: cursor, end: cursor })
+    } else if (selectionStart >= 0 && selectionEnd >= 0 && selectionStart !== selectionEnd) {
+      setSelection({ start: selectionStart, end: selectionEnd })
     }
   }, [cursor, selectionStart, selectionEnd])
 
@@ -320,7 +321,8 @@ const Input = forwardRef<HandlerRef<TextInput, FinalInputProps>, FinalInputProps
   }
 
   const onSelectionChange = (evt: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
-    bindselectionchange!(
+    setSelection(evt.nativeEvent.selection)
+    bindselectionchange && bindselectionchange(
       getCustomEvent(
         'selectionchange',
         evt,
@@ -428,7 +430,7 @@ const Input = forwardRef<HandlerRef<TextInput, FinalInputProps>, FinalInputProps
         onBlur: bindblur && onInputBlur,
         onKeyPress: bindconfirm && onKeyPress,
         onSubmitEditing: bindconfirm && multiline && onSubmitEditing,
-        onSelectionChange: bindselectionchange && onSelectionChange,
+        onSelectionChange: onSelectionChange,
         onTextInput: onTextInput,
         onChange: onChange,
         onContentSizeChange: onContentSizeChange
