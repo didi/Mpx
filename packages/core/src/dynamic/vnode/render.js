@@ -144,7 +144,7 @@ export default function _genVnodeTree (astData, contextScope, options) {
     node.attrsList.forEach((attr) => {
       if (attr.name === 'class' || attr.name === 'style') {
         // class/style 的表达式为数组形式，class/style的计算过程需要放到逻辑层，主要是因为有逻辑匹配的过程去生成 vnodeTree
-        const helper = attr.name === 'class' ? stringify.stringifyClass : stringify.stringifyStyle
+        const helper = attr.name === 'class' ? stringify.c : stringify.s
         let value = ''
         if (attr.__exp) {
           let valueArr = evalExps(attr.__exp)
