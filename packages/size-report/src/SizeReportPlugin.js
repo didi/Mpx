@@ -836,7 +836,7 @@ class SizeReportPlugin {
           // 遍历 skylineSubpackages
           this.options.skylineSubpackages.forEach((skylineSubpackage) => {
             const subpackageInfo = mpx.dynamicEntryInfo[skylineSubpackage]
-            if (subpackageInfo.entries) {
+            if (subpackageInfo && subpackageInfo.entries) {
               subpackageInfo.entries.forEach((entry) => {
                 if (entry.hasAsync) {
                   // 报错提示skyline分包不可被其他分包异步引用
