@@ -11,7 +11,7 @@ const JD_UNSUPPORTED_TAG_NAME_ARR = ['functional-page-navigator', 'live-pusher',
 // 快应用不支持的标签集合
 const QA_UNSUPPORTED_TAG_NAME_ARR = ['movable-view', 'movable-area', 'open-data', 'official-account', 'editor', 'functional-page-navigator', 'live-player', 'live-pusher', 'ad', 'cover-image']
 // RN不支持的标签集合
-const RN_UNSUPPORTED_TAG_NAME_ARR = ['open-data', 'official-account', 'editor', 'functional-page-navigator', 'live-player', 'live-pusher', 'ad', 'progress', 'slider', 'audio', 'camera', 'video', 'match-media', 'page-container', 'editor', 'keyboard-accessory', 'map']
+const RN_UNSUPPORTED_TAG_NAME_ARR = ['open-data', 'official-account', 'editor', 'functional-page-navigator', 'live-player', 'live-pusher', 'ad', 'progress', 'slider', 'audio', 'camera', 'match-media', 'page-container', 'editor', 'keyboard-accessory', 'map']
 
 /**
  * @param {function(object): function} print

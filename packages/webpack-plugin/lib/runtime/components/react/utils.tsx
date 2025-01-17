@@ -518,6 +518,7 @@ export const useLayout = ({ props, hasSelfPercent, setWidth, setHeight, onLayout
   const hasLayoutRef = useRef(false)
   const layoutStyle = useMemo(() => { return !hasLayoutRef.current && hasSelfPercent ? HIDDEN_STYLE : {} }, [hasLayoutRef.current])
   const layoutProps: Record<string, any> = {}
+  const navigation = useNavigation()
   const enableOffset = props['enable-offset']
   if (hasSelfPercent || onLayout || enableOffset) {
     layoutProps.onLayout = (e: LayoutChangeEvent) => {
@@ -529,7 +530,8 @@ export const useLayout = ({ props, hasSelfPercent, setWidth, setHeight, onLayout
       }
       if (enableOffset) {
         nodeRef.current?.measure((x: number, y: number, width: number, height: number, offsetLeft: number, offsetTop: number) => {
-          layoutRef.current = { x, y, width, height, offsetLeft, offsetTop }
+          const { y: navigationY = 0 } = navigation?.layout || {}
+          layoutRef.current = { x, y: y - navigationY, width, height, offsetLeft, offsetTop: offsetTop - navigationY }
         })
       }
       onLayout && onLayout(e)
