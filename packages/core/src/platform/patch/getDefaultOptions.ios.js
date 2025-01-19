@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useSyncExternalStore, useRef, useMemo, useState, useCallback, createElement, memo, forwardRef, useImperativeHandle, useContext, Fragment, cloneElement } from 'react'
+import { useEffect, useLayoutEffect, useSyncExternalStore, useRef, useMemo, useState, useCallback, createElement, memo, forwardRef, useImperativeHandle, useContext, Fragment, cloneElement, createContext } from 'react'
 import * as ReactNative from 'react-native'
 import { ReactiveEffect } from '../../observer/effect'
 import { watch } from '../../observer/watch'
@@ -10,6 +10,8 @@ import mergeOptions from '../../core/mergeOptions'
 import { queueJob, hasPendingJob } from '../../observer/scheduler'
 import { createSelectorQuery, createIntersectionObserver } from '@mpxjs/api-proxy'
 import { IntersectionObserverContext, RouteContext, KeyboardAvoidContext } from '@mpxjs/webpack-plugin/lib/runtime/components/react/dist/context'
+
+const ProviderContext = createContext(null)
 
 function getSystemInfo () {
   const window = ReactNative.Dimensions.get('window')
@@ -384,10 +386,12 @@ export function getDefaultOptions ({ type, rawOptions = {}, currentInject }) {
     const propsRef = useRef(null)
     const intersectionCtx = useContext(IntersectionObserverContext)
     const pageId = useContext(RouteContext)
+    const parentProvides = useContext(ProviderContext)
     propsRef.current = props
     let isFirst = false
     if (!instanceRef.current) {
       isFirst = true
+      rawOptions.parentProvides = parentProvides
       instanceRef.current = createInstance({ propsRef, type, rawOptions, currentInject, validProps, components, pageId, intersectionCtx })
     }
     const instance = instanceRef.current
@@ -479,8 +483,18 @@ export function getDefaultOptions ({ type, rawOptions = {}, currentInject }) {
       const rootProps = getRootProps(props, validProps)
       rootProps.style = Object.assign({}, root.props.style, rootProps.style)
       // update root props
-      return cloneElement(root, rootProps)
+      return createElement(
+          ProviderContext.Provider,
+          { value: proxy.provides },
+          cloneElement(root, rootProps)
+      )
     }
+
+    const provides = useMemo(() => proxy.provides, [proxy.provides])
+    if (provides) {
+      return createElement(ProviderContext.Provider, { value: provides }, root)
+    }
+
     return root
   }))
 

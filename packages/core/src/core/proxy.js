@@ -171,6 +171,12 @@ export default class MpxProxy {
       // web中BEFORECREATE钩子通过vue的beforeCreate钩子单独驱动
       this.callHook(BEFORECREATE)
       setCurrentInstance(this)
+      if (isReact) {
+        this.parentProvides = this.options.parentProvides
+      } else {
+        this.parent = this.resolveParent()
+        this.provides = this.parent ? this.parent.provides : Object.create(null)
+      }
       // 在 props/data 初始化之前初始化 inject
       this.initInject()
       this.initProps()
@@ -192,6 +198,13 @@ export default class MpxProxy {
 
     if (this.reCreated) {
       nextTick(this.mounted.bind(this))
+    }
+  }
+
+  resolveParent () {
+    if (isFunction(this.target.selectOwnerComponent)) {
+      const parent = this.target.selectOwnerComponent()
+      return parent ? parent.__mpxProxy : null
     }
   }
 
@@ -233,16 +246,6 @@ export default class MpxProxy {
     if (__mpx_dynamic_runtime__) {
       // 页面/组件销毁清除上下文的缓存
       contextMap.remove(this.uid)
-    }
-    if (!isWeb && this.options.__type__ === 'page') {
-      // 小程序页面销毁时移除对应的 provide
-      if (isFunction(this.target.getPageId)) {
-        const pageId = this.target.getPageId()
-        const providesMap = global.__mpxProvidesMap
-        if (providesMap.__pages[pageId]) {
-          delete providesMap.__pages[pageId]
-        }
-      }
     }
     this.callHook(BEFOREUNMOUNT)
     this.scope?.stop()
