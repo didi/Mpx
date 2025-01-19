@@ -22,7 +22,8 @@ export default function getBuiltInMixins ({ type, rawOptions = {} }) {
       directiveHelperMixin(),
       styleHelperMixin(),
       refsMixin(),
-      i18nMixin()
+      i18nMixin(),
+      relationsMixin(type)
     ]
   } else if (__mpx_mode__ === 'web') {
     bulitInMixins = [

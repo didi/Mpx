@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useSyncExternalStore, useRef, useMemo, useState, useCallback, createElement, memo, forwardRef, useImperativeHandle, useContext, Fragment, cloneElement } from 'react'
+import { useEffect, useLayoutEffect, useSyncExternalStore, useRef, useMemo, useState, useCallback, createElement, memo, forwardRef, useImperativeHandle, useContext, Fragment, cloneElement, createContext } from 'react'
 import * as ReactNative from 'react-native'
 import { ReactiveEffect } from '../../observer/effect'
 import { watch } from '../../observer/watch'
@@ -193,7 +193,7 @@ const instanceProto = {
   }
 }
 
-function createInstance ({ propsRef, type, rawOptions, currentInject, validProps, components, pageId, intersectionCtx }) {
+function createInstance ({ propsRef, type, rawOptions, currentInject, validProps, components, pageId, intersectionCtx, relation }) {
   const instance = Object.create(instanceProto, {
     dataset: {
       get () {
@@ -230,6 +230,18 @@ function createInstance ({ propsRef, type, rawOptions, currentInject, validProps
     __validProps: {
       get () {
         return validProps
+      },
+      enumerable: false
+    },
+    __componentPath: {
+      get () {
+        return currentInject.componentPath || ''
+      },
+      enumerable: false
+    },
+    __relation: {
+      get () {
+        return relation
       },
       enumerable: false
     },
@@ -374,6 +386,43 @@ function usePageStatus (navigation, pageId) {
   }, [navigation])
 }
 
+const RelationsContext = createContext(null)
+
+const needRelationContext = (options) => {
+  const relations = options.relations
+  if (!relations) return false
+  return Object.keys(relations).some((path) => {
+    const relation = relations[path]
+    const type = relation.type
+    return type === 'child' || type === 'descendant'
+  })
+}
+
+const provideRelation = (instance) => {
+  const componentPath = instance.__componentPath
+  const relation = instance.__relation
+  if (relation) {
+    if (!relation[componentPath]) {
+      relation[componentPath] = instance
+    }
+    return relation
+  } else {
+    return {
+      [componentPath]: instance
+    }
+  }
+}
+
+const wrapRelationProvider = (element, instance) => {
+  if (needRelationContext(instance.__mpxProxy.options)) {
+    return createElement(RelationsContext.Provider, {
+      value: provideRelation(instance)
+    }, element)
+  } else {
+    return element
+  }
+}
+
 export function getDefaultOptions ({ type, rawOptions = {}, currentInject }) {
   rawOptions = mergeOptions(rawOptions, type, false)
   const components = Object.assign({}, rawOptions.components, currentInject.getComponents())
@@ -384,11 +433,12 @@ export function getDefaultOptions ({ type, rawOptions = {}, currentInject }) {
     const propsRef = useRef(null)
     const intersectionCtx = useContext(IntersectionObserverContext)
     const pageId = useContext(RouteContext)
+    const relation = useContext(RelationsContext)
     propsRef.current = props
     let isFirst = false
     if (!instanceRef.current) {
       isFirst = true
-      instanceRef.current = createInstance({ propsRef, type, rawOptions, currentInject, validProps, components, pageId, intersectionCtx })
+      instanceRef.current = createInstance({ propsRef, type, rawOptions, currentInject, validProps, components, pageId, intersectionCtx, relation })
     }
     const instance = instanceRef.current
     useImperativeHandle(ref, () => {
@@ -479,9 +529,9 @@ export function getDefaultOptions ({ type, rawOptions = {}, currentInject }) {
       const rootProps = getRootProps(props, validProps)
       rootProps.style = Object.assign({}, root.props.style, rootProps.style)
       // update root props
-      return cloneElement(root, rootProps)
+      return wrapRelationProvider(cloneElement(root, rootProps), instance)
     }
-    return root
+    return wrapRelationProvider(root, instance)
   }))
 
   if (rawOptions.options?.isCustomText) {
