@@ -301,9 +301,16 @@ module.exports = function getSpec ({ warn, error }) {
           const modifierStr = match[3] || ''
           const rPrefix = runRules(spec.event.prefix, prefix, { mode: 'ali' })
           const rEventName = runRules(eventRules, eventName, { mode: 'ali' })
-          return {
-            name: dash2hump(rPrefix + '-' + rEventName) + modifierStr,
-            value
+          if (rPrefix === 'capture-on' || rPrefix === 'capture-catch') {
+            return {
+              name: rPrefix + rEventName.replace(/^[a-z]/, l => l.toUpperCase()) + modifierStr,
+              value
+            }
+          } else {
+            return {
+              name: dash2hump(rPrefix + '-' + rEventName) + modifierStr,
+              value
+            }
           }
         },
         swan ({ name, value }, { eventRules }) {
@@ -444,7 +451,9 @@ module.exports = function getSpec ({ warn, error }) {
           ali (prefix) {
             const prefixMap = {
               bind: 'on',
-              catch: 'catch'
+              catch: 'catch',
+              'capture-catch': 'capture-catch',
+              'capture-bind': 'capture-on'
             }
             if (!prefixMap[prefix]) {
               error(`Ali environment does not support [${prefix}] event handling!`)
